@@ -1,4 +1,4 @@
-/* 
+/*
  * Ardesia -- a program for painting on the screen
  * with this program you can play, draw, learn and teach
  * This program has been written such as a freedom sonet
@@ -10,12 +10,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -25,7 +25,7 @@
 #include <utils.h>
 #include <annotation_window.h>
 #include <broken.h>
-
+#include <bar_callbacks.h>
 
 /* Number x is roundable to y. */
 static gboolean
@@ -44,7 +44,69 @@ is_similar (gdouble x,
 }
 
 
-/* 
+static guint countPointsAlongHorizontal(GSList *list, gdouble x, gdouble pixel_tollerance ) {
+    guint i =0;
+    guint length = g_slist_length (list);
+    guint cnt =0;
+    /* Search the min and max coordinates */
+    for (i=1; i<length; i++)
+      {
+        AnnotatePoint *cur_point = (AnnotatePoint *) g_slist_nth_data (list, i);
+        if ( is_similar(cur_point->x, x, pixel_tollerance) ) {
+            cnt++;
+        }
+
+      }
+      return cnt;
+}
+
+static guint countPointsAlongVertical(GSList *list, gdouble y, gdouble pixel_tollerance ) {
+    guint i =0;
+    guint length = g_slist_length (list);
+    guint cnt =0;
+    /* Search the min and max coordinates */
+    for (i=1; i<length; i++)
+      {
+        AnnotatePoint *cur_point = (AnnotatePoint *) g_slist_nth_data (list, i);
+        if ( is_similar(cur_point->y, y, pixel_tollerance) ) {
+            cnt++;
+        }
+
+      }
+      return cnt;
+}
+
+/* Take the list and found the minx miny maxx and maxy points. */
+static void found_min_and_max (GSList  *list,
+                               gdouble *minx,
+                               gdouble *miny,
+                               gdouble *maxx,
+                               gdouble *maxy)
+{
+  guint i = 0;
+
+  /* Initialize the min and max to the first point coordinates */
+  AnnotatePoint *first_point = (AnnotatePoint *) g_slist_nth_data (list, i);
+  *minx = first_point->x;
+  *miny = first_point->y;
+  *maxx = first_point->x;
+  *maxy = first_point->y;
+
+  guint length = g_slist_length (list);
+
+  /* Search the min and max coordinates */
+  for (i=1; i<length; i++)
+    {
+      AnnotatePoint *cur_point = (AnnotatePoint *) g_slist_nth_data (list, i);
+      *minx = MIN (*minx, cur_point->x);
+      *miny = MIN (*miny, cur_point->y);
+      *maxx = MAX (*maxx, cur_point->x);
+      *maxy = MAX (*maxy, cur_point->y);
+    }
+}
+
+
+/*
  * The list of point is roundable to a rectangle
  * Note this algorithm found only the rectangle parallel to the axis.
  */
@@ -89,6 +151,29 @@ is_a_rectangle (GSList *list,
   return TRUE;
 }
 
+static gboolean
+is_a_triangle (GSList *list,
+                gdouble pixel_tollerance)
+{
+    gdouble minx=0, miny=0, maxx=0, maxy=0;
+    found_min_and_max (list, &minx, &miny, &maxx, &maxy);
+
+    // the * 3 adds some additional tolerance for wonky rectangles
+    guint top = countPointsAlongVertical( list, miny, pixel_tollerance * 3 );
+    guint bottom = countPointsAlongVertical( list, maxy, pixel_tollerance * 3 );
+    guint left = countPointsAlongHorizontal( list, minx, pixel_tollerance * 3 );
+    guint right = countPointsAlongHorizontal( list, maxx, pixel_tollerance * 3 );
+
+replace_status_message(g_strdup_printf("triangle: %d %d %d %d", top, left, bottom, right));
+
+    // if one of the axis only has one point in it we will regard as a triangle
+    return ( top == 1 || bottom == 1 || left == 1 || right == 1 );
+
+    //
+    // /* Postcondition: it is a triangle. */
+    // return FALSE;
+}
+
 
 /* Calculate the media of the point pression. */
 static gdouble
@@ -96,45 +181,15 @@ calculate_medium_pression (GSList *list)
 {
   guint i = 0;
   gdouble total_pressure = 0;
-  guint lenght = g_slist_length (list);
+  guint length = g_slist_length (list);
 
-  for (i=0; i<lenght; i++)
+  for (i=0; i<length; i++)
     {
       AnnotatePoint *cur_point = (AnnotatePoint *) g_slist_nth_data (list, i);
       total_pressure = total_pressure + cur_point->pressure;
     }
 
   return total_pressure/i;
-}
-
-
-/* Take the list and found the minx miny maxx and maxy points. */
-static void found_min_and_max (GSList  *list,
-                               gdouble *minx,
-                               gdouble *miny,
-                               gdouble *maxx,
-                               gdouble *maxy)
-{
-  guint i = 0;
-
-  /* Initialize the min and max to the first point coordinates */
-  AnnotatePoint *first_point = (AnnotatePoint *) g_slist_nth_data (list, i);
-  *minx = first_point->x;
-  *miny = first_point->y;
-  *maxx = first_point->x;
-  *maxy = first_point->y;
-
-  guint lenght = g_slist_length (list);
-
-  /* Search the min and max coordinates */
-  for (i=1; i<lenght; i++)
-    {
-      AnnotatePoint *cur_point = (AnnotatePoint *) g_slist_nth_data (list, i);
-      *minx = MIN (*minx, cur_point->x);
-      *miny = MIN (*miny, cur_point->y);
-      *maxx = MAX (*maxx, cur_point->x);
-      *maxy = MAX (*maxy, cur_point->y);
-    }
 }
 
 
@@ -147,10 +202,10 @@ is_similar_to_a_regular_polygon (GSList *list,
   gdouble ideal_distance = -1;
   gdouble total_distance = 0;
 
-  guint lenght = g_slist_length (list);
+  guint length = g_slist_length (list);
   AnnotatePoint *old_point = (AnnotatePoint *) g_slist_nth_data (list, i);
 
-  for (i=1; i<lenght; i++)
+  for (i=1; i<length; i++)
     {
       AnnotatePoint *point = (AnnotatePoint *) g_slist_nth_data (list, i);
       gdouble distance = get_distance (old_point->x, old_point->y, point->x, point->y);
@@ -158,14 +213,14 @@ is_similar_to_a_regular_polygon (GSList *list,
       old_point = point;
     }
 
-  ideal_distance = total_distance/lenght;
+  ideal_distance = total_distance/length;
 
   // printf ("Ideal %f\n\n",ideal_distance);
 
   i = 0;
   old_point = (AnnotatePoint *) g_slist_nth_data (list, i);
 
-  for (i=1; i<lenght; i++)
+  for (i=1; i<length; i++)
     {
       AnnotatePoint *point = (AnnotatePoint *) g_slist_nth_data (list, i);
       /* I have seen that a good compromise allow around 33% of error. */
@@ -199,7 +254,7 @@ extract_polygon (GSList *list)
   gdouble x1 = -1;
   gdouble y1 = -1;
   guint i = 0;
-  guint lenght = 0;
+  guint length = 0;
   gdouble angle_step = 0;
   AnnotatePoint *last_point = NULL;
   AnnotatePoint *first_point = NULL;
@@ -209,11 +264,11 @@ extract_polygon (GSList *list)
   cx = (maxx + minx)/2;
   cy = (maxy + miny)/2;
   radius = ((maxx-minx)+ (maxy-miny))/4;
-  lenght = g_slist_length (list);
-  angle_step = 2 * M_PI / (lenght-1);
+  length = g_slist_length (list);
+  angle_step = 2 * M_PI / (length-1);
   angle_off += angle_step/2;
 
-  for (i=0; i<lenght-1; i++)
+  for (i=0; i<length-1; i++)
     {
       AnnotatePoint *point = (AnnotatePoint *) g_slist_nth_data (list, i);
       x1 = radius * cos (angle_off) + cx;
@@ -223,7 +278,7 @@ extract_polygon (GSList *list)
       angle_off += angle_step;
     }
 
-  last_point = (AnnotatePoint *) g_slist_nth_data (list, lenght -1);
+  last_point = (AnnotatePoint *) g_slist_nth_data (list, length -1);
   first_point = (AnnotatePoint *) g_slist_nth_data (list, 0);
   last_point->x = first_point->x;
   last_point->y = first_point->y;
@@ -276,18 +331,18 @@ straighten (GSList *list)
   AnnotatePoint *last_out_point =  NULL;
   gdouble degree_threshold = 15;
   GSList *list_out = NULL;
-  guint lenght = 0;
+  guint length = 0;
   guint i;
   gdouble direction;
 
-  lenght = g_slist_length (list);
-  
+  length = g_slist_length (list);
+
   /* Copy the first one point; it is a good point. */
   inp_point = (AnnotatePoint *) g_slist_nth_data (list, 0);
   first_point =  allocate_point (inp_point->x, inp_point->y, inp_point->width, inp_point->pressure);
   list_out = g_slist_prepend (list_out, first_point);
 
-  for (i=0; i<lenght-2; i++)
+  for (i=0; i<length-2; i++)
     {
       AnnotatePoint *point_a = (AnnotatePoint *) g_slist_nth_data (list, i);
       AnnotatePoint *point_b = (AnnotatePoint *) g_slist_nth_data (list, i+1);
@@ -302,7 +357,7 @@ straighten (GSList *list)
           AnnotatePoint *point =  allocate_point (point_b->x,
                                                   point_b->y,
                                                   point_b->width,point_b->pressure);
-                                                  
+
           list_out = g_slist_prepend (list_out, point);
         }
 
@@ -310,7 +365,7 @@ straighten (GSList *list)
     }
 
   /* Copy the last point; it is a good point. */
-  last_point = (AnnotatePoint *) g_slist_nth_data (list, lenght-1);
+  last_point = (AnnotatePoint *) g_slist_nth_data (list, length-1);
   last_out_point =  allocate_point (last_point->x,
                                     last_point->y,
                                     last_point->width,
@@ -321,9 +376,9 @@ straighten (GSList *list)
   /* I reverse the list to preserve the initial order. */
   list_out = g_slist_reverse (list_out);
 
-  lenght = g_slist_length (list_out);
+  length = g_slist_length (list_out);
 
-  if (lenght!=2)
+  if (length!=2)
     {
       return list_out;
     }
@@ -361,7 +416,7 @@ build_meaningful_point_list     (GSList *list_inp,
                                  gboolean rectify,
                                  gdouble pixel_tollerance)
 {
-  guint lenght = g_slist_length (list_inp);
+  guint length = g_slist_length (list_inp);
   guint i = 0;
   AnnotatePoint *point_a = (AnnotatePoint *) g_slist_nth_data (list_inp, i);
   AnnotatePoint *point_b = (AnnotatePoint *) g_slist_nth_data (list_inp, i+1);
@@ -387,7 +442,7 @@ build_meaningful_point_list     (GSList *list_inp,
   /* add a point with the coordinates of point_a. */
   list_out = g_slist_prepend (list_out, first_point);
 
-  if (lenght == 2)
+  if (length == 2)
     {
       AnnotatePoint *second_point =  allocate_point (b_x, b_y, b_width, pressure);
       /* add a point with the coordinates of point_a. */
@@ -401,10 +456,10 @@ build_meaningful_point_list     (GSList *list_inp,
       gdouble y1 = 0.0;
       gdouble x2 = 0.0;
       gdouble y2 = 0.0;
-      AnnotatePoint *last_point = (AnnotatePoint *) g_slist_nth_data (list_inp, lenght-1);
+      AnnotatePoint *last_point = (AnnotatePoint *) g_slist_nth_data (list_inp, length-1);
       AnnotatePoint *last_point_copy = (AnnotatePoint *) NULL;
 
-      for (i = i+2; i<lenght; i++)
+      for (i = i+2; i<length; i++)
 	{
 	  point_c = (AnnotatePoint *) g_slist_nth_data (list_inp, i);
 	  c_x = point_c->x;
@@ -456,8 +511,8 @@ build_meaningful_point_list     (GSList *list_inp,
 GSList *
 build_outbounded_rectangle (GSList *list)
 {
-  guint lenght = g_slist_length (list);
-  AnnotatePoint *point = (AnnotatePoint *) g_slist_nth_data (list, lenght/2);
+  guint length = g_slist_length (list);
+  AnnotatePoint *point = (AnnotatePoint *) g_slist_nth_data (list, length/2);
   GSList *ret_list = (GSList *) NULL;
 
   gdouble minx = 0;
@@ -478,11 +533,143 @@ build_outbounded_rectangle (GSList *list)
   ret_list = g_slist_prepend (ret_list, point1);
 
   AnnotatePoint *point0 =  allocate_point (minx, miny, point->width, point->pressure);
-
   ret_list = g_slist_prepend (ret_list, point0);
+
+  // added in return point to close off
+  AnnotatePoint *point4 =  allocate_point (minx, maxy, point->width, point->pressure);
+  ret_list = g_slist_prepend (ret_list, point4);
 
   return ret_list;
 }
+
+/* try to build a triangle out of the points */
+GSList *
+build_outbounded_triangle (GSList *list, gdouble pixel_tollerance)
+{
+  guint length = g_slist_length (list);
+  AnnotatePoint *point = (AnnotatePoint *) g_slist_nth_data (list, length/2);
+  GSList *ret_list = (GSList *) NULL;
+  AnnotatePoint *point0, *point1, *point2, *point3;
+  gdouble minx = 0;
+  gdouble miny = 0;
+  gdouble maxx = 0;
+  gdouble maxy = 0;
+
+  found_min_and_max (list, &minx, &miny, &maxx, &maxy);
+
+  guint top = countPointsAlongVertical( list, miny, pixel_tollerance * 3 );
+  guint bottom = countPointsAlongVertical( list, maxy, pixel_tollerance * 3 );
+  guint left = countPointsAlongHorizontal( list, minx, pixel_tollerance * 3 );
+  guint right = countPointsAlongHorizontal( list, maxx, pixel_tollerance * 3 );
+
+  if ( top == 1 && left == 1 && bottom > 1 && right == 1 ) {
+      point0 =  allocate_point ((minx+maxx)/2, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point0);
+
+      point1 =  allocate_point (minx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point1);
+
+      point2 =  allocate_point (maxx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point2);
+
+      point3 =  allocate_point ((minx+maxx)/2, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point3);
+  } else if ( top == 1 && left > 1 && bottom > 1 && right == 1 ) {
+      point0 =  allocate_point (minx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point0);
+
+      point1 =  allocate_point (minx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point1);
+
+      point2 =  allocate_point (maxx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point2);
+
+      point3 =  allocate_point (minx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point3);
+  } else if ( top == 1 && left == 1 && bottom > 1 && right > 1 ) {
+      point0 =  allocate_point (minx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point0);
+
+      point1 =  allocate_point (maxx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point1);
+
+      point2 =  allocate_point (maxx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point2);
+
+      point3 =  allocate_point (minx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point3);
+  } else if ( top == 1 && left == 1 && bottom == 1 && right > 1 ) {
+      point0 =  allocate_point (minx, (miny+maxy)/2, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point0);
+
+      point1 =  allocate_point (maxx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point1);
+
+      point2 =  allocate_point (maxx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point2);
+
+      point3 =  allocate_point (minx, (miny+maxy)/2, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point3);
+  } else if ( top > 1 && left == 1 && bottom == 1 && right > 1 ) {
+      point0 =  allocate_point (minx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point0);
+
+      point1 =  allocate_point (maxx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point1);
+
+      point2 =  allocate_point (maxx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point2);
+
+      point3 =  allocate_point (minx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point3);
+  } else if ( top > 1 && left > 1 && bottom == 1 && right == 1 ) {
+      point0 =  allocate_point (minx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point0);
+
+      point1 =  allocate_point (maxx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point1);
+
+      point2 =  allocate_point (minx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point2);
+
+      point3 =  allocate_point (minx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point3);
+  } else if ( top == 1 && left > 1 && bottom == 1 && right == 1 ) {
+      point0 =  allocate_point (maxx, (maxy+miny)/2, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point0);
+
+      point1 =  allocate_point (minx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point1);
+
+      point2 =  allocate_point (minx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point2);
+
+      point3 =  allocate_point (maxx, (maxy+miny)/2, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point3);
+  } else if ( top > 1 && left == 1 && bottom == 1 && right == 1 ) {
+      point0 =  allocate_point ((minx+maxx)/2, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point0);
+
+      point1 =  allocate_point (minx, miny, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point1);
+
+      point2 =  allocate_point (maxx, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point2);
+
+      point3 =  allocate_point ((minx+maxx)/2, maxy, point->width, point->pressure);
+      ret_list = g_slist_prepend (ret_list, point3);
+  } else {
+      // copy over the list, cannot return as it will be freed
+      for( guint i=0; i < length; i++ ) {
+          point = (AnnotatePoint *) g_slist_nth_data (list, i);
+          point0 = allocate_point (point->x, point->y, point->width, point->pressure);
+          ret_list = g_slist_prepend( ret_list, point0 );
+      }
+  }
+
+  return ret_list;
+}
+
 
 
 /* The path in list is similar to an ellipse. */
@@ -530,7 +717,7 @@ is_similar_to_an_ellipse (GSList *list,
   gdouble aq = 0;
   gdouble bq = 0;
 
-  guint lenght = g_slist_length (list);
+  guint length = g_slist_length (list);
 
   found_min_and_max (list, &minx, &miny, &maxx, &maxy);
 
@@ -540,7 +727,7 @@ is_similar_to_an_ellipse (GSList *list,
   aq = pow (a,2);
   bq = pow (b,2);
 
-  /* 
+  /*
    * If in one point the sum of the distance by focus F1 and F2 differer more than
    * the tolerance value the curve line will not be considered an ellipse.
    */
@@ -576,7 +763,7 @@ is_similar_to_an_ellipse (GSList *list,
 
   /* In the ellipse the sum of the distance (p,f1)+distance (p,f2) must be constant. */
 
-  for (i=0; i<lenght; i++)
+  for (i=0; i<length; i++)
     {
       AnnotatePoint *point = (AnnotatePoint *) g_slist_nth_data (list, i);
       gdouble distancef1 = get_distance (point->x, point->y, f1x, f1y);
@@ -608,11 +795,11 @@ build_rectified_list(GSList  *list_inp,
   if (close_path)
     {
 
-      guint lenght = g_slist_length (list_inp);
+      guint length = g_slist_length (list_inp);
       guint i = 0;
 
       /* Copy the input list */
-      for (i=0; i<lenght; i++)
+      for (i=0; i<length; i++)
         {
           AnnotatePoint *point = (AnnotatePoint *) g_slist_nth_data (list_inp, i);
           AnnotatePoint *point_copy =  allocate_point (point->x, point->y, point->width, point->pressure);
@@ -631,23 +818,51 @@ build_rectified_list(GSList  *list_inp,
       /* It is similar to regular a polygon. */
       if (is_similar_to_a_regular_polygon (ret_list, pixel_tollerance))
         {
+            replace_status_message(gettext("extracted as polygon"));
           ret_list = extract_polygon (ret_list);
         }
       else
         {
-        
           if (is_a_rectangle (ret_list, pixel_tollerance))
             {
+                replace_status_message(gettext("detected rectangle"));
               /* It is a rectangle. */
               GSList *rect_list = build_outbounded_rectangle (ret_list);
               g_slist_foreach (ret_list, (GFunc)g_free, NULL);
               g_slist_free (ret_list);
               ret_list = rect_list;
-            }
+          } else {
+              ret_list = straighten (ret_list);
+              guint npoints = g_slist_length( ret_list );
+              if ( is_a_triangle( ret_list, pixel_tollerance ) ) {
+                  // GSList *tri_list = build_outbounded_triangle( ret_list, pixel_tollerance );
+                  // g_slist_foreach (ret_list, (GFunc)g_free, NULL);
+                  // g_slist_free (ret_list);
+                  // ret_list = tri_list;
+                  replace_status_message(gettext("straightening triangle"));
+                  ret_list = straighten (ret_list);
+              } else if ( npoints > 8 ) {
+                  // circle time
+                  ret_list = extract_polygon( ret_list );
+              } else {
+                  // here we force into a rectangle as it makes more sense than wiggly rubbish
+                  // we know the point list is greater than 3
+                  // so we want to look for the first point as we assume this is the most meaningful
+                  // point for the user.
+                  // we also look for the furthest vertical point as that will be meaningful for the user
+                  // we then take these and add corner points, removing the rest
+                  GSList *rect_list = build_outbounded_rectangle(ret_list);
+                  g_slist_foreach (ret_list, (GFunc)g_free, NULL);
+                  g_slist_free (ret_list);
+                  ret_list = rect_list;
+                  replace_status_message(g_strdup_printf("forcing %d points into rectangle (%d pts)", npoints, g_slist_length (ret_list)));
+              }
+          }
         }
     }
   else
     {
+        replace_status_message(gettext("straightening"));
       /* Try to make straighten. */
       ret_list = straighten (list_inp);
     }
@@ -683,5 +898,3 @@ broken (GSList   *list_inp,
 
   return meaningful_point_list;
 }
-
-

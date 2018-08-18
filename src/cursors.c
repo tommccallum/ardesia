@@ -10,12 +10,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -49,11 +49,11 @@ cairo_image_surface_create_from_svg (const gchar* file)
   cairo_surface_t *surface;
   cairo_t *cr;
   RsvgHandle* handle;
-  RsvgDimensionData  dimensions;  
+  RsvgDimensionData  dimensions;
 
   handle = rsvg_handle_new_from_file(file, NULL);
   rsvg_handle_get_dimensions (handle, &dimensions);
-  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 
+  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
                                         dimensions.width,
                                         dimensions.height);
   cr = cairo_create(surface);
@@ -220,7 +220,7 @@ get_eraser_pixbuf (gdouble     thickness,
 
   icon_width = cairo_image_surface_get_width (image_surface);
   icon_height = cairo_image_surface_get_height (image_surface);
-  
+
   cursor_width = (gint) icon_width + thickness + circle_width;
   cursor_height = (gint) icon_height + thickness +  circle_width;
 
@@ -286,7 +286,7 @@ get_filler_pixbuf (GdkPixbuf **pixbuf)
                                                  gdk_pixbuf_get_width (*pixbuf),
                                                  gdk_pixbuf_get_height (*pixbuf),
                                                  gdk_pixbuf_get_rowstride (*pixbuf));
-                                                 
+
   filler_cr = cairo_create (surface);
 
   clear_cairo_context (filler_cr);
@@ -300,7 +300,7 @@ get_filler_pixbuf (GdkPixbuf **pixbuf)
 
   cairo_surface_destroy (surface);
   cairo_destroy (filler_cr);
-  
+
   /* The pixbuf created by cairo has the r and b color inverted. */
   gdk_pixbuf_swap_blue_with_red (pixbuf);
 }
@@ -329,7 +329,10 @@ get_pen_pixbuf (GdkPixbuf **pixbuf,
   else
     {
       /* Take the opacity. */
-      gchar* alpha = g_substr (color, 6, 8);
+      gchar* alpha = "FF";
+      if ( strlen(color) == 8 ) {
+          alpha = g_substr (color, 6, 8);
+      }
 
       if (g_strcmp0 (alpha, "FF") == 0)
         {
@@ -401,7 +404,7 @@ destroy_cached_image_surfaces ()
 
 
 /* Initialize the cursors variables. */
-void 
+void
 cursors_main ()
 {
   // The data will be loaded on runtime.
@@ -412,7 +415,9 @@ cursors_main ()
 void
 allocate_invisible_cursor (GdkCursor **cursor)
 {
-  *cursor = gdk_cursor_new (GDK_BLANK_CURSOR);		
+    GdkDisplay* display = gdk_display_get_default();
+    *cursor = gdk_cursor_new_for_display( display, GDK_BLANK_CURSOR );
+  //*cursor = gdk_cursor_new (GDK_BLANK_CURSOR);
 }
 
 
@@ -451,7 +456,7 @@ set_eraser_cursor (GdkCursor **cursor,
 					pixbuf,
 					size/2 + circle_width,
 					gdk_pixbuf_get_height (pixbuf) - size/2-circle_width);
-					
+
   g_object_unref (pixbuf);
 }
 
@@ -476,5 +481,3 @@ cursors_main_quit ()
 {
   destroy_cached_image_surfaces ();
 }
-
-

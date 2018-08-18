@@ -1,4 +1,4 @@
-/* 
+/*
  * Ardesia -- a program for painting on the screen
  * with this program you can play, draw, learn and teach
  * This program has been written such as a freedom sonet
@@ -10,12 +10,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -29,6 +29,7 @@
 #include <gtk/gtk.h>
 
 #include <cairo.h>
+#include <ardesia.h>
 
 #ifdef _WIN32
 #  include <cairo-win32.h>
@@ -60,7 +61,7 @@ typedef enum
     ANNOTATE_PEN,
 
     ANNOTATE_ERASER,
-    
+
     ANNOTATE_FILLER,
 
   } AnnotatePaintType;
@@ -87,6 +88,8 @@ typedef struct _AnnotateSavePoint
 
 typedef struct
 {
+  /* number of points added to coord_list */
+  guint length;
 
   /* List of the coordinates of the last line drawn. */
   GSList       *coord_list;
@@ -102,7 +105,11 @@ typedef struct
 /* Annotation data used by the callbacks. */
 typedef struct
 {
-
+  gboolean is_background_visible;
+  gboolean is_text_editor_visible;
+  gboolean is_annotation_visible;
+  gboolean is_window_covering_toolbar;
+  gboolean is_opaque;
   /* Gtkbuilder for annotation window. */
   GtkBuilder *annotation_window_gtk_builder;
 
@@ -141,13 +148,13 @@ typedef struct
 
   /* Paint context for the eraser. */
   AnnotatePaintContext *default_eraser;
-  
+
   /* Paint context for the filler. */
   AnnotatePaintContext *default_filler;
 
   /* Point to the current context. */
   AnnotatePaintContext *cur_context;
-  
+
   /*
    * This store the old paint type tool;
    * it is used to switch from/to eraser/pen
@@ -160,7 +167,7 @@ typedef struct
 
   /* Is the rectify mode enabled? */
   gboolean     rectify;
-  
+
   /* Is the roundify mode enabled?*/
   gboolean     roundify;
 
@@ -179,20 +186,31 @@ typedef struct
   /* Pen color. */
   gchar *color;
 
+
+  /* monitor */
+  Monitor* monitor;
 } AnnotateData;
 
+AnnotateData* annotation_data;
 
 /* Initialize the annotation cairo context */
 void
 initialize_annotation_cairo_context (AnnotateData *data);
 
+GtkWidget *
+create_annotation_window();
+
+void
+position_annotation_window();
 
 /* Initialize the annotation window. */
-gint
-annotate_init                (GtkWidget *parent,
-                              gchar     *iwb_filename,
-                              gboolean   debug);
+void
+annotate_init                (gchar     *iwb_filename,
+                              gboolean   debug,
+                              Monitor*  monitor);
 
+void
+annotation_window_change(int width, int height);
 
 /* Set-up input device. */
 void
@@ -356,8 +374,8 @@ annotate_draw_point          (AnnotateDeviceData *devdata,
 void
 annotate_draw_point_list     (AnnotateDeviceData *devdata,
                               GSList             *list);
-                              
-                              
+
+
 /* Draw an arrow using some polygons. */
 void
 annotate_draw_arrow          (AnnotateDeviceData *devdata,
@@ -370,8 +388,8 @@ annotate_fill                (AnnotateDeviceData *devdata,
                               AnnotateData       *data,
                               gdouble             x,
                               gdouble             y);
-                              
-                              
+
+
 /* Select eraser, pen or other tool for tablet. */
 void
 annotate_select_tool         (AnnotateData *data,
@@ -415,7 +433,13 @@ annotate_add_savepoint       ();
 void
 annotate_configure_pen_options    (AnnotateData       *data);
 
+gboolean
+annotation_window_button_press(GdkEventButton* ev, AnnotateData* data);
+
+gboolean
+annotation_window_mouse_move( GdkEventMotion* ev, AnnotateData* data ) ;
+
+gboolean
+annotation_window_button_release( GdkEventButton* ev, AnnotateData* data);
 
 #endif
-
-

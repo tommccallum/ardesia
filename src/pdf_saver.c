@@ -1,4 +1,4 @@
-/* 
+/*
  * Ardesia -- a program for painting on the screen
  * with this program you can play, draw, learn and teach
  * This program has been written such as a freedom sonet
@@ -10,12 +10,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -30,7 +30,7 @@
 #include <utils.h>
 #include <saver.h>
 #include <keyboard.h>
-
+#include <bar.h>
 
 /* internal structure allocated once. */
 static PdfData *pdf_data;
@@ -50,13 +50,13 @@ start_save_pdf_dialog (GtkWindow *parent,
   gchar *supported_extension = ".pdf";
 
   gdk_window_set_cursor (gtk_widget_get_window(get_annotation_window ()), (GdkCursor *) NULL);
-  
+
   GtkWidget *chooser = gtk_file_chooser_dialog_new (gettext ("Export as pdf"),
                                                     parent,
                                                     GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                    GTK_STOCK_CANCEL,
+                                                    "_Cancel",
                                                     GTK_RESPONSE_CANCEL,
-                                                    GTK_STOCK_SAVE_AS,
+                                                    "Save _As",
                                                     GTK_RESPONSE_ACCEPT,
                                                     NULL);
 
@@ -69,7 +69,7 @@ start_save_pdf_dialog (GtkWindow *parent,
   preview = gtk_image_new ();
   preview_pixbuf = gdk_pixbuf_scale_simple (pixbuf, preview_width, preview_height, GDK_INTERP_BILINEAR);
   gtk_image_set_from_pixbuf (GTK_IMAGE (preview), preview_pixbuf);
-  
+
   gtk_file_chooser_set_preview_widget (GTK_FILE_CHOOSER (chooser), preview);
   g_object_unref (preview_pixbuf);
 
@@ -119,7 +119,7 @@ start_save_pdf_dialog (GtkWindow *parent,
 
 
 /* Initialize the pdf saver. */
-static gboolean 
+static gboolean
 init_pdf_saver (GtkWindow *parent,
                 GdkPixbuf *pixbuf)
 {
@@ -149,15 +149,15 @@ init_pdf_saver (GtkWindow *parent,
 static void
 pdf_save ()
 {
-  gint height = gdk_screen_height ();
-  gint width = gdk_screen_width ();
+    int width = gtk_widget_get_allocated_width( annotation_data->annotation_window );
+    int height = gtk_widget_get_allocated_height( annotation_data->annotation_window );
 
   /* create the cairo surface for pdf */
   cairo_surface_t *pdf_surface = cairo_pdf_surface_create (pdf_data->filename, width, height);
   cairo_t *pdf_cr = cairo_create (pdf_surface);
 
   gint lenght = g_slist_length (pdf_data->input_filelist);
-  
+
   gint i;
 
   for (i=lenght-1; i>=0; i--)
@@ -194,10 +194,18 @@ void wait_for_pdf_save_pending_thread ()
 void
 add_pdf_page (GtkWindow *parent)
 {
-  GdkPixbuf *pixbuf = grab_screenshot ();
+  grab_screenshot (add_pdf_page_callback);
+}
+
+void
+add_pdf_page_callback( GdkPixbuf* pixbuf ) {
+    GtkWidget* parent = get_bar_widget();
+
+    int width = gtk_widget_get_allocated_width( annotation_data->annotation_window );
+    int height = gtk_widget_get_allocated_height( annotation_data->annotation_window );
   cairo_surface_t *saved_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-                                                               gdk_screen_width (),
-                                                               gdk_screen_height ());
+                                                               width,
+                                                               height);
 
   cairo_t *cr = cairo_create (saved_surface);
   const gchar *tmp_dir = g_get_tmp_dir ();
@@ -207,14 +215,14 @@ add_pdf_page (GtkWindow *parent)
   GError *err = NULL ;
 
   g_free (screenshoot_name);
-  
+
   g_free (default_filename);
 
   /* Load a surface with the data->annotation_cairo_context content and write the file. */
   gdk_cairo_set_source_pixbuf (cr, pixbuf, 0, 0);
   cairo_paint (cr);
   cairo_surface_write_to_png (saved_surface, filename);
-  cairo_surface_destroy (saved_surface); 
+  cairo_surface_destroy (saved_surface);
   cairo_destroy (cr);
 
   if (pdf_data == NULL)
@@ -222,11 +230,11 @@ add_pdf_page (GtkWindow *parent)
       if (!g_thread_supported ())
         {
           /* Initialize internal mutex "gdk_threads_mutex". */
-          g_thread_init (NULL);
-          gdk_threads_init ();
+          // g_thread_init (NULL);
+          // gdk_threads_init ();
           g_printerr ("g_thread supported\n");
         }
-      if (!init_pdf_saver (parent, pixbuf))
+      if (!init_pdf_saver ( GTK_WINDOW(parent), pixbuf))
         {
           g_object_unref (pixbuf);
           return;
@@ -239,7 +247,7 @@ add_pdf_page (GtkWindow *parent)
   wait_for_pdf_save_pending_thread ();
 
   /* Start save thread. */
-  if ( (pdf_data->thread = g_thread_create ( (GThreadFunc) pdf_save, (void *) NULL, TRUE, &err)) == NULL)
+  if ( (pdf_data->thread = g_thread_try_new ( "pdf_thread", (GThreadFunc) pdf_save, (void *) NULL, &err)) == NULL)
     {
       g_printerr ("Thread create failed: %s!!\n", err->message );
       g_error_free (err) ;
@@ -279,5 +287,3 @@ quit_pdf_saver ()
       pdf_data = NULL;
     }
 }
-
-

@@ -1,4 +1,4 @@
-/* 
+/*
  * Ardesia -- a program for painting on the screen
  * with this program you can play, draw, learn and teach
  * This program has been written such as a freedom sonet
@@ -10,12 +10,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -89,8 +89,6 @@ on_preference_ok_button_clicked (GtkButton *buton,
                                  gpointer   data)
 {
   PreferenceData *preference_data = (PreferenceData*) data;
-  gchar *rgb = NULL;
-  gchar *a = NULL;
   gchar *rgba = NULL;
   GObject *color_tool_obj = gtk_builder_get_object (preference_data->preference_dialog_gtk_builder, "color");
   GtkToggleButton *color_tool_button = GTK_TOGGLE_BUTTON (color_tool_obj);
@@ -101,21 +99,22 @@ on_preference_ok_button_clicked (GtkButton *buton,
       GObject *bg_color_obj = gtk_builder_get_object (preference_data->preference_dialog_gtk_builder,
 						      "backgroundColorButton");
 
-      GtkColorButton *background_color_button = GTK_COLOR_BUTTON (bg_color_obj);
-      GdkColor *gdkcolor = g_malloc ( (gsize) sizeof (GdkColor));
-      gtk_color_button_get_color (background_color_button, gdkcolor);
+      //GtkColorButton *background_color_button = GTK_COLOR_BUTTON (bg_color_obj);
+      GdkRGBA *gdkcolor = g_malloc ( (gsize) sizeof (GdkRGBA));
+      gtk_color_chooser_get_rgba (GTK_COLOR_CHOOSER(bg_color_obj), gdkcolor);
+// g_printf("CSS3 color format: %f %f %f %f\n",gdkcolor->red,gdkcolor->green,gdkcolor->blue,gdkcolor->alpha);
+      // rgb = gdkcolor_to_rgb (gdkcolor);
+      // a = g_strdup_printf ("%02x", gtk_color_chooser_get_use_alpha (GTK_COLOR_CHOOSER(bg_color_obj))/257);
+      // rgba = g_strdup_printf ("%s%s", rgb, a);
 
-      rgb = gdkcolor_to_rgb (gdkcolor);
-      a = g_strdup_printf ("%02x", gtk_color_button_get_alpha (background_color_button)/257);
-      rgba = g_strdup_printf ("%s%s", rgb, a);
-      
-      update_background_color (rgba);
+      rgba = gdkrgba_to_rgba(gdkcolor);
+      update_background_color( rgba );
 
-      g_free (a);
-      g_free (rgb);
-      g_free (rgba);
+      // g_free (a);
+      // g_free (rgb);
+      // g_free (rgba);
       g_free (gdkcolor);
-      set_background_type (1);
+
     }
   else
     {
@@ -141,23 +140,23 @@ on_preference_ok_button_clicked (GtkButton *buton,
                 }
               else
                 {
-                  update_background_image (filename);
-                  set_background_type (2);
+                    update_background_image( filename );
+
                   fclose (stream);
                 }
             }
           else
             {
               /* The file is not set; same cae that no background */
-              clear_background_window ();
-              set_background_type (0);
+
+              clear_background_context ();
+
             }
         }
       else
         {
           /* none */
-          clear_background_window ();
-          set_background_type (0);
+          clear_background_context ();
         }
     }
 }
@@ -170,5 +169,3 @@ on_preference_cancel_button_clicked    (GtkButton *buton,
 {
   /* do nothing */
 }
-
-

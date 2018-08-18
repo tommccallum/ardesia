@@ -1,5 +1,5 @@
 
-/* 
+/*
  * Ardesia -- a program for painting on the screen
  * with this program you can play, draw, learn and teach
  * This program has been written such as a freedom sonet
@@ -11,12 +11,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -24,9 +24,12 @@
 
 
 #include <utils.h>
+#include <commandline.h>
 #include <bar.h>
 
-/* 
+BarData *bar_data = NULL;
+
+/*
  * Calculate the better position where put the bar.
  */
 static void
@@ -82,11 +85,21 @@ calculate_initial_position (GtkWidget *ardesia_bar_window,
                             gint *y,
                             gint w_width,
                             gint w_height,
+                            GdkRectangle* rect,
                             gint position)
 {
-  gint d_width = gdk_screen_width ();
-  gint d_height = gdk_screen_height ();
-
+    // GdkDisplay* display = gdk_display_get_default();
+    // assert( display != NULL );
+    // GdkMonitor* monitor = gdk_display_get_monitor_at_window(display, gtk_widget_get_window(ardesia_bar_window));
+    // assert( monitor != NULL );
+    // //int scaleFactor = gdk_monitor_get_scale_factor (monitor);
+    // GdkRectangle* rect = g_new(GdkRectangle,1);
+    // gdk_monitor_get_geometry( monitor, rect);
+    // assert(rect != NULL);
+    // g_printf("Monitor Geometry: %d %d\n", rect->width, rect->height);
+    gint d_width = rect->width;
+    gint d_height = rect->height;
+    //g_free(rect);
   /* Resize if larger that screen width. */
   if (w_width>d_width)
     {
@@ -118,7 +131,10 @@ init_bar_data ()
   bar_data->rectifier = FALSE;
   bar_data->rounder = FALSE;
   bar_data->thickness = MEDIUM_THICKNESS;
-
+  bar_data->screenshot_pending = FALSE;
+  bar_data->screenshot_callback = NULL;
+  bar_data->screenshot_saved_location_x = -1;
+  bar_data->screenshot_saved_location_y = -1;
   return bar_data;
 }
 
@@ -136,26 +152,30 @@ get_xdg_config_file (const char *name)
   {
       return file;
   }
-  
+
   free(file);
 
   for (dir = system_dirs; *dir; ++dir )
   {
       file = g_build_filename(*dir, name, NULL);
-      if (g_file_test(file, G_FILE_TEST_EXISTS) == TRUE)
+      if (g_file_test(file, G_FILE_TEST_EXISTS) == TRUE) {
           return file;
-          free(file);
+      }
+      free(file);
   }
   return NULL;
 }
 
-/* Create the ardesia bar window. */
+/* Create the ardesia bar window.
+ * @rect    the monitor rectangle to place toolbar on
+ */
 GtkWidget *
 create_bar_window (CommandLine *commandline,
+                   GdkRectangle* rect,
                    GtkWidget   *parent)
 {
   GtkWidget *bar_window = (GtkWidget *) NULL;
-  BarData *bar_data = (BarData *) NULL;
+  bar_data = (BarData *) NULL;
   GError *error = (GError *) NULL;
   gchar *file = UI_FILE;
   gint x = 0;
@@ -175,7 +195,7 @@ create_bar_window (CommandLine *commandline,
                                                  GTK_STYLE_PROVIDER(css),
                                                  GTK_STYLE_PROVIDER_PRIORITY_USER);
     }
-    
+
   bar_gtk_builder = gtk_builder_new ();
 
   if (commandline->position>2)
@@ -185,11 +205,16 @@ create_bar_window (CommandLine *commandline,
     }
   else
     {
-
       /* East or west. */
-      if (gdk_screen_height () < 720)
+      // GdkDisplay* display = gdk_display_get_default();
+      // GdkMonitor* monitor = gdk_display_get_primary_monitor(display);
+      // //int scaleFactor = gdk_monitor_get_scale_factor (monitor);
+      // GdkRectangle* rect = NULL;
+      // gdk_monitor_get_geometry( monitor, rect);
+      int height_in_application_pixels = rect->height;
+      if (height_in_application_pixels < 720)
         {
-          /* 
+          /*
            * The bar is too long and then I use an horizontal layout;
            * this is done to have the full bar for net book and screen
            * with low vertical resolution.
@@ -202,6 +227,7 @@ create_bar_window (CommandLine *commandline,
 
 
   /* Load the bar_gtk_builder file with the definition of the ardesia bar gui. */
+  g_printf("File: %s\n", file);
   gtk_builder_add_from_file (bar_gtk_builder, file, &error);
   if (error)
     {
@@ -216,11 +242,12 @@ create_bar_window (CommandLine *commandline,
 
   bar_window = GTK_WIDGET (gtk_builder_get_object (bar_gtk_builder, BAR_WIDGET_NAME));
   gtk_widget_set_name (bar_window, BAR_WIDGET_NAME);
-    
+
   /* Connect all the callback from bar_gtk_builder xml file. */
   gtk_builder_connect_signals (bar_gtk_builder, (gpointer) bar_data);
 
   //gtk_window_set_transient_for (GTK_WINDOW (bar_window), GTK_WINDOW (parent));
+
 
   if (commandline->decorated)
     {
@@ -229,24 +256,26 @@ create_bar_window (CommandLine *commandline,
 
   gtk_window_get_size (GTK_WINDOW (bar_window) , &width, &height);
 
+  // returns the bounds of where we would the area to be
+  //GdkRectangle* bounds =  get_toolbar_area();
+
   /* x and y will be the bar left corner coordinates. */
   calculate_initial_position (bar_window,
                               &x,
                               &y,
                               width,
                               height,
+                              rect,
                               commandline->position);
 
   /* The position is calculated respect the top left corner
-   * and then I set the north west gravity. 
+   * and then I set the north west gravity.
    */
   gtk_window_set_gravity (GTK_WINDOW (bar_window), GDK_GRAVITY_NORTH_WEST);
 
   /* Move the window in the desired position. */
-  gtk_window_move (GTK_WINDOW (bar_window), x, y);
+  gtk_window_move (GTK_WINDOW (bar_window), rect->x + x, rect->y + y);
 
 
   return bar_window;
 }
-
-

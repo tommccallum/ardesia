@@ -1,4 +1,4 @@
-/* 
+/*
  * Ardesia -- a program for painting on the screen
  * with this program you can play, draw, learn and teach
  * This program has been written such as a freedom sonet
@@ -10,12 +10,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -37,7 +37,7 @@ show_override_dialog (GtkWindow *parent)
 {
   GtkWidget *msg_dialog = (GtkWidget *) NULL;
   gint result = GTK_RESPONSE_NO;
-  
+
   msg_dialog = gtk_message_dialog_new (GTK_WINDOW (parent),
                                        GTK_DIALOG_MODAL,
                                        GTK_MESSAGE_WARNING,
@@ -62,13 +62,13 @@ void
 show_could_not_write_dialog (GtkWindow *parent_window)
 {
   GtkWidget *permission_denied_dialog = (GtkWidget *) NULL;
-  
+
   permission_denied_dialog = gtk_message_dialog_new (parent_window,
                                                      GTK_DIALOG_MODAL,
                                                      GTK_MESSAGE_ERROR,
                                                      GTK_BUTTONS_OK,
                                                      gettext ("Couldn't open file for writing: Permission denied"));
-	
+
   gtk_window_set_modal (GTK_WINDOW (permission_denied_dialog), TRUE);
 
   gtk_dialog_run (GTK_DIALOG (permission_denied_dialog));
@@ -85,10 +85,17 @@ show_could_not_write_dialog (GtkWindow *parent_window)
  * containing the screenshot.
  */
 void
-start_save_image_dialog (GtkToolButton *toolbutton,
-                         GtkWindow     *parent)
+start_save_image_dialog ()
 {
+    g_printf("calling start_save_image_dialog\n");
+    grab_screenshot (start_save_image_dialog_callback);
+}
 
+void
+start_save_image_dialog_callback (GdkPixbuf *buffer)
+{
+    g_printf("calling start_save_image_dialog_callback\n");
+  GtkWindow* parent = GTK_WINDOW (get_bar_widget ());
   GtkWidget *preview = NULL;
   gint preview_width = 128;
   gint preview_height = 128;
@@ -98,14 +105,14 @@ start_save_image_dialog (GtkToolButton *toolbutton,
   gchar *supported_extension = ".pdf";
   gint run_status = GTK_RESPONSE_NO;
   gboolean screenshot = FALSE;
-  GdkPixbuf *buf = grab_screenshot ();
+
 
   GtkWidget *chooser = gtk_file_chooser_dialog_new (gettext ("Export as pdf"),
                                                     parent,
                                                     GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                    GTK_STOCK_CANCEL,
+                                                    "_Cancel",
                                                     GTK_RESPONSE_CANCEL,
-                                                    GTK_STOCK_SAVE_AS,
+                                                    "Save _As",
                                                     GTK_RESPONSE_ACCEPT,
                                                     NULL);
 
@@ -116,9 +123,9 @@ start_save_image_dialog (GtkToolButton *toolbutton,
 
   /* Save the preview in a buffer. */
   preview = gtk_image_new ();
-  preview_pixbuf = gdk_pixbuf_scale_simple (buf, preview_width, preview_height, GDK_INTERP_BILINEAR);
+  preview_pixbuf = gdk_pixbuf_scale_simple (buffer, preview_width, preview_height, GDK_INTERP_BILINEAR);
   gtk_image_set_from_pixbuf (GTK_IMAGE (preview), preview_pixbuf);
-  
+
   gtk_file_chooser_set_preview_widget (GTK_FILE_CHOOSER (chooser), preview);
   g_object_unref (preview_pixbuf);
   preview_pixbuf = NULL;
@@ -155,7 +162,7 @@ start_save_image_dialog (GtkToolButton *toolbutton,
           if ( result == GTK_RESPONSE_NO)
             {
               screenshot = FALSE;
-            } 
+            }
         }
       else
         {
@@ -181,15 +188,13 @@ start_save_image_dialog (GtkToolButton *toolbutton,
   if (screenshot)
     {
       /* Store the buffer on file. */
-      save_pixbuf_on_png_file (buf, filename);
+      save_pixbuf_on_png_file (buffer, filename);
       /* Add to the list of the artefacts created in the session. */
       add_artifact (filename);
     }
 
   g_free (filename);
   filename = NULL;
-  g_object_unref (buf);
-  buf = NULL;
+  g_object_unref (buffer);
+  buffer = NULL;
 }
-
-

@@ -1,23 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.4 -->
 <interface>
-  <!-- interface-requires gtk+ 3.0 -->
+  <requires lib="gtk+" version="3.0"/>
   <object class="GtkWindow" id="text_window">
     <property name="app_paintable">True</property>
-    <property name="can_focus">False</property>
-    <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_BUTTON_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_STRUCTURE_MASK | GDK_PROXIMITY_IN_MASK | GDK_PROXIMITY_OUT_MASK</property>
-    <property name="double_buffered">False</property>
-    <property name="title">text_window</property>
+    <property name="can_focus">True</property>
+    <property name="has_focus">True</property>
+    <property name="is_focus">True</property>
+    <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_BUTTON_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_KEY_RELEASE_MASK | GDK_STRUCTURE_MASK | GDK_PROXIMITY_IN_MASK | GDK_PROXIMITY_OUT_MASK</property>
     <property name="resizable">False</property>
     <property name="destroy_with_parent">True</property>
-    <property name="skip_taskbar_hint">True</property>
-    <property name="accept_focus">False</property>
     <property name="focus_on_map">False</property>
     <property name="decorated">False</property>
-    <signal name="draw" handler="on_text_window_expose_event" swapped="no"/>
-    <signal name="screen-changed" handler="on_text_window_screen_changed" swapped="no"/>
-    <signal name="configure-event" handler="on_text_window_configure" swapped="no"/>
     <signal name="button-release-event" handler="on_text_window_button_release" swapped="no"/>
+    <signal name="configure-event" handler="on_text_window_configure" swapped="no"/>
+    <signal name="draw" handler="on_text_window_expose_event" swapped="no"/>
+    <signal name="key-press-event" handler="on_text_window_key_press_event" swapped="no"/>
     <signal name="motion-notify-event" handler="on_text_window_cursor_motion" swapped="no"/>
+    <signal name="screen-changed" handler="on_text_window_screen_changed" swapped="no"/>
+    <child>
+      <placeholder/>
+    </child>
     <child>
       <placeholder/>
     </child>

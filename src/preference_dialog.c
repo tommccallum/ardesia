@@ -1,4 +1,4 @@
-/* 
+/*
  * Ardesia -- a program for painting on the screen
  * with this program you can play, draw, learn and teach
  * This program has been written such as a freedom sonet
@@ -10,12 +10,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -70,7 +70,7 @@ start_preference_dialog      (GtkWindow *parent)
   GtkFileChooser *chooser = NULL;
   GtkFileFilter *filter = (GtkFileFilter *) NULL;
   GObject *bg_color_obj = (GObject *) NULL;
-  GtkWidget *color_button = (GtkWidget *) NULL;
+  // GtkWidget *color_button = (GtkWidget *) NULL;
 
   PreferenceData *preference_data = (PreferenceData *) NULL;
 
@@ -95,7 +95,7 @@ start_preference_dialog      (GtkWindow *parent)
   gtk_window_set_transient_for (GTK_WINDOW (preference_dialog), parent);
   gtk_window_set_modal (GTK_WINDOW (preference_dialog), TRUE);
   gtk_window_set_keep_above (GTK_WINDOW (preference_dialog), TRUE);
-  
+
   img_obj = gtk_builder_get_object (preference_data->preference_dialog_gtk_builder,
                                     "imageChooserButton");
 
@@ -115,14 +115,14 @@ start_preference_dialog      (GtkWindow *parent)
   bg_color_obj = gtk_builder_get_object (preference_data->preference_dialog_gtk_builder,
                                          "backgroundColorButton");
 
-  color_button = GTK_WIDGET (bg_color_obj);
-  gtk_color_button_set_use_alpha (GTK_COLOR_BUTTON (color_button), TRUE);
+  // color_button = GTK_WIDGET (bg_color_obj);
+  gtk_color_chooser_set_use_alpha (GTK_COLOR_CHOOSER(bg_color_obj), TRUE);
 
   /* Connect all signals by reflection. */
   gtk_builder_connect_signals (preference_data->preference_dialog_gtk_builder,
                                (gpointer) preference_data);
 
-  gint background_type = get_background_type();
+  gint background_type = background_data->type;
 
   if (background_type == 1)
     {
@@ -141,16 +141,18 @@ start_preference_dialog      (GtkWindow *parent)
       gtk_toggle_button_set_active (image_tool_button, TRUE);
     }
 
-  gchar *rgba = get_background_color ();
+  gchar *rgba = background_data->color;
   if (rgba)
     {
-      GdkColor *gdkcolor = rgba_to_gdkcolor (rgba);
-      guint16 alpha = strtol(&rgba[6], NULL, 16) * 257;
-      gtk_color_button_set_alpha (GTK_COLOR_BUTTON (color_button), alpha);
-      gtk_color_button_set_color (GTK_COLOR_BUTTON (color_button), gdkcolor);
+      GdkRGBA *gdkcolor = rgba_to_gdkcolor (rgba);
+      //guint16 alpha = strtol(&rgba[6], NULL, 16) * 257;
+      gtk_color_chooser_set_use_alpha (GTK_COLOR_CHOOSER(bg_color_obj), TRUE);
+      //gtk_color_button_set_alpha (GTK_COLOR_BUTTON (color_button), alpha);
+      gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(bg_color_obj), gdkcolor);
+      //gtk_color_button_set_color (GTK_COLOR_BUTTON (color_button), gdkcolor);
     }
 
-  gchar *filename = get_background_image ();
+  gchar *filename = background_data->image;
   if (filename)
     {
       gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (chooser), filename);
@@ -170,7 +172,7 @@ start_preference_dialog      (GtkWindow *parent)
   preference_data = NULL;
 
   stop_virtual_keyboard ();
-  
+
   #ifdef _WIN32
   /*
    * In Windows the parent bar go above the dialog;
@@ -180,5 +182,3 @@ start_preference_dialog      (GtkWindow *parent)
   gtk_window_set_keep_above (GTK_WINDOW (parent), TRUE);
 #endif
 }
-
-

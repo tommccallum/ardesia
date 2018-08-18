@@ -2,8 +2,8 @@
 
 AC_PREREQ(2.54)
 
-m4_define([ardesia_version], [1.2])
-m4_define([gtk_required_version], [2.99.3])
+m4_define([ardesia_version], [2.0])
+m4_define([gtk_required_version], [3.20])
 
 AC_INIT([ardesia], [ardesia_version],
 	http://code.google.com/p/ardesia/issues/list,

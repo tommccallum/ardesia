@@ -10,12 +10,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <math.h>
-
+#include <assert.h>
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
@@ -61,16 +61,16 @@
 /* The gtk builder object of the bar window */
 GtkBuilder *bar_gtk_builder;
 
-		
+
 #define PROGRAM_NAME "Ardesia"
 
 /* Color definition in RGB. */
-#define BLACK "000000"
-#define WHITE "FFFFFF"
-#define RED   "FF0000"
-#define YELLOW "FFFF00"
-#define GREEN "00FF00"
-#define BLUE "0000FF"
+#define BLACK "000000FF"
+#define WHITE "FFFFFFFF"
+#define RED   "FF0000FF"
+#define YELLOW "FFFF00FF"
+#define GREEN "00FF00FF"
+#define BLUE "0000FFFF"
 
 
 /* Struct to store the painted point. */
@@ -82,6 +82,19 @@ typedef struct
   gdouble pressure;
 } AnnotatePoint;
 
+
+gboolean
+intersect( GdkRectangle* a, GdkRectangle* b );
+
+GdkPixbuf*
+take_screenshot_now();
+
+/* Draw a test square on a Cairo context in top left hand corner */
+void
+draw_test_square( cairo_t* context );
+
+void
+draw_test_square_with_color( cairo_t* context, int r, int g, int b );
 
 /* Get the name of the current project. */
 gchar *
@@ -126,7 +139,7 @@ void add_artifact       (gchar* path);
 void
 free_artifacts          ();
 
-				
+
 /* get bar window widget. */
 GtkWidget *
 get_bar_widget          ();
@@ -134,21 +147,23 @@ get_bar_widget          ();
 
 /* Take a GdkColor and return the RGB string. */
 gchar *
-gdkcolor_to_rgb         (GdkColor *gdkcolor);
+gdkcolor_to_rgb         (GdkRGBA *gdkcolor);
 
+gchar *
+gdkrgba_to_rgba    (GdkRGBA *gdkcolor);
 
 /* Scale the surface with the width and height requested */
 cairo_surface_t *
 scale_surface           (cairo_surface_t  *surface,
                          gdouble           width,
                          gdouble           height);
-				
-				
+
+
 /* Set the cairo surface color to the RGBA string. */
 void
 cairo_set_source_color_from_string     (cairo_t  *cr,
                                         gchar    *color);
-                              
+
 
 /* Set the cairo surface color to transparent. */
 void
@@ -182,10 +197,10 @@ drill_window_in_bar_area     (GtkWidget  *widget);
 
 
 /*
- * Take a rgba string and return the pointer to the allocated GdkColor 
+ * Take a rgba string and return the pointer to the allocated GdkColor
  * neglecting the alpha channel.
  */
-GdkColor *
+GdkRGBA *
 rgba_to_gdkcolor        (gchar  *rgb);
 
 
@@ -196,11 +211,11 @@ save_pixbuf_on_png_file      (GdkPixbuf    *pixbuf,
 
 
 /* Grab the screenshoot and put it in the image buffer. */
-GdkPixbuf *
-grab_screenshot         ();
+void
+grab_screenshot    (void (*screenshot_callback) ( GdkPixbuf*));
 
 
-/* 
+/*
  * Return a file name containing
  * the project name and the current date.
  *
@@ -314,10 +329,17 @@ g_substr           (const gchar  *string,
 
 
 /*
- * This function create a segmentation fault; 
+ * This function create a segmentation fault;
  * it is useful to test the segmentation fault handler.
  */
 void
 create_segmentation_fault    ();
 
+void get_surface_size (cairo_surface_t *surface,
+			       int *width, int *height);
 
+void get_context_size (cairo_t *cr,
+			       int *width, int *height);
+
+void
+save_cairo_context( cairo_t* cr, gchar* savedir, gchar* category, int index );

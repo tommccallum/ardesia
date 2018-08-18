@@ -1,4 +1,4 @@
-/* 
+/*
  * Ardesia -- a program for painting on the screen
  * with this program you can play, draw, learn and teach
  * This program has been written such as a freedom sonet
@@ -10,12 +10,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -30,7 +30,7 @@
 #include <gsf/gsf-input-stdio.h>
 #include <gsf/gsf-outfile.h>
 #include <gsf/gsf-outfile-zip.h>
-
+#include <annotation_window.h>
 
 /* The file pointer to the iwb file. */
 static FILE *fp = NULL;
@@ -67,8 +67,8 @@ close_iwb ()
 static void
 open_svg ()
 {
-  gint width  = gdk_screen_width ();
-  gint height = gdk_screen_height ();
+  gint width  = gtk_widget_get_allocated_width (annotation_data->annotation_window);
+  gint height = gtk_widget_get_allocated_height (annotation_data->annotation_window);
 
   fprintf (fp,
            "\t<svg:svg width=\"%d\" height=\"%d\" viewbox=\"0 0 %d %d\">\n",
@@ -92,8 +92,8 @@ close_svg ()
 static void
 add_savepoint (gint index)
 {
-  gint width = gdk_screen_width ();
-  gint height = gdk_screen_height ();
+    gint width  = gtk_widget_get_allocated_width (annotation_data->annotation_window);
+    gint height = gtk_widget_get_allocated_height (annotation_data->annotation_window);
   gchar *id = g_strdup_printf ("id%d", index +1);
   gchar *file = g_strdup_printf ("images/%s_%d_vellum.png", PACKAGE_NAME, index);
 
@@ -118,14 +118,14 @@ static void
 add_background (gchar *img_dir_path,
                 gchar *background_image)
 {
-  gint width  = gdk_screen_width ();
-  gint height = gdk_screen_height ();
+    gint width  = gtk_widget_get_allocated_width (annotation_data->annotation_window);
+    gint height = gtk_widget_get_allocated_height (annotation_data->annotation_window);
   gchar *image_destination_path = (gchar *) NULL;
 
   image_destination_path = g_build_filename (img_dir_path, "ardesia_0_vellum.png", (gchar *) 0);
 
   /* Background image valid and set to image type */
-  if ((background_image) && (get_background_type ()==2))
+  if ((background_image) && (background_data->type==2))
     {
       /* if the background is oupdated */
       if (g_strcmp0 (background_image, image_destination_path) != 0)
@@ -149,7 +149,7 @@ add_background (gchar *img_dir_path,
     }
   else
     {
-      gchar *color = get_background_color();
+      gchar *color = background_data->color;
       /* Initialize the rgba components to transparent */
       guint r = 0;
       guint g = 0;
@@ -157,7 +157,7 @@ add_background (gchar *img_dir_path,
       guint a = 0;
 
       /* If the background type is colour then parse it */
-      if ((color!=NULL) && (get_background_type ()!=0))
+      if ((color!=NULL) && (background_data->type !=0))
         {
           sscanf (color, "%02X%02X%02X%02X", &r, &g, &b, &a);
         }
@@ -231,7 +231,7 @@ create_xml_content (gchar *content_filename,
                     gchar *background_image)
 {
   int savepoint_number = -1;
-  GDir *img_dir;  
+  GDir *img_dir;
 
   fp = fopen (content_filename, "w");
 
@@ -321,7 +321,7 @@ create_iwb (gchar *zip_filename,
   gsf_init ();
 
   gst_output = gsf_output_stdio_new (zip_filename, &err);
-  if (gst_output == NULL) 
+  if (gst_output == NULL)
     {
       g_warning ("Error saving iwb: %s\n", err->message);
       g_error_free (err);
@@ -345,7 +345,7 @@ create_iwb (gchar *zip_filename,
   gsf_output_close ((GsfOutput *) gst_outfile);
   g_object_unref (G_OBJECT (gst_outfile));
 
-  gsf_shutdown ();  
+  gsf_shutdown ();
 }
 
 
@@ -355,7 +355,7 @@ export_iwb (gchar *iwb_location)
 {
   const gchar *tmpdir = g_get_tmp_dir ();
   gchar *images = "images";
-  gchar *background_image = get_background_image();
+  gchar *background_image = background_data->image;
   gchar *project_name = get_project_name ();
   gchar *ardesia_tmp_dir = g_build_filename (tmpdir, PACKAGE_NAME, (gchar *) 0);
   gchar *project_tmp_dir = g_build_filename (ardesia_tmp_dir, project_name, (gchar *) 0);
@@ -368,7 +368,7 @@ export_iwb (gchar *iwb_location)
       gchar *iwb_file = (gchar *) NULL;
       gchar *content_filename = "content.xml";
       gchar *content_filepath = g_build_filename (project_tmp_dir, content_filename, (gchar *) 0);
-      
+
       /* If the iwb location is null means that it is a new project. */
       if (iwb_location == NULL)
         {
@@ -403,5 +403,3 @@ export_iwb (gchar *iwb_location)
   g_free (project_tmp_dir);
   g_free (img_dir_path);
 }
-
-

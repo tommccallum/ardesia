@@ -21,4 +21,45 @@
  *
  */
 
+#ifndef __MONITOR_H
+#define __MONITOR_H
+
+#include <gdk/gdk.h>
 #include <gtk/gtk.h>
+#include <glib.h>
+#include <glib/gprintf.h>
+
+guint DRAW_ON_MONITOR;
+guint DRAW_ON_CLIPAREA;
+guint DRAW_ON_FULLDESKTOP;
+
+typedef struct
+{
+    guint monitor_index;
+    gboolean primary;
+    GdkRectangle* rect;
+} Monitor;
+
+
+Monitor*
+copy_monitor_struct( Monitor* m );
+
+void
+destroy_monitor_struct( gpointer data);
+
+void
+print_monitor_struct( gpointer data, gpointer userdata );
+
+int
+is_to_left_of( gconstpointer a, gconstpointer b, gpointer data );
+
+GList*
+create_monitor_list();
+
+void
+destroy_monitor_list();
+
+void
+print_monitor_list(GList* monitors);
+
+#endif

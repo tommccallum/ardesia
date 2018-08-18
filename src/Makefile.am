@@ -2,14 +2,14 @@
 
 
 if PLATFORM_WIN32
-        AM_CPPFLAGS = -DPACKAGE_LOCALE_DIR=\""../$(DATADIRNAME)/locale"\" 
+        AM_CPPFLAGS = -DPACKAGE_LOCALE_DIR=\""../$(DATADIRNAME)/locale"\"
 else
-        AM_CPPFLAGS = -DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" 
+        AM_CPPFLAGS = -DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\"
 endif
 
 AM_CPPFLAGS += -DPACKAGE_SRC_DIR=\""$(srcdir)"\"  \
 	-DPACKAGE_DATA_DIR=\""$(datadir)"\"       \
-	$(ARDESIA_CFLAGS) 
+	$(ARDESIA_CFLAGS)
 
 AM_CFLAGS =\
 	 -Wall                                    \
@@ -33,6 +33,8 @@ ardesia_SOURCES = \
         bezier_spline.c                           \
 	bezier_spline.h                           \
         crash_dialog.c                            \
+    cairo_functions.c \
+    cairo_functions.h \
 	crash_dialog.h                            \
 	crash_dialog_callbacks.c                  \
 	crash_dialog_callbacks.h                  \
@@ -72,17 +74,22 @@ ardesia_SOURCES = \
 	share_confirmation_dialog.h               \
 	share_confirmation_dialog_callbacks.c     \
 	share_confirmation_dialog_callbacks.h     \
+    text_window_callbacks.c \
+    text_window_callbacks.h \
         text_window.c                             \
 	text_window.h                             \
         info_dialog.c                             \
 	info_dialog.h                             \
         recorder.c                                \
 	recorder.h                                \
+    workspace.c                         \
+    monitor.c                           \
+    commandline.c                           \
 	ardesia.c                                 \
-	ardesia.h 
-   
+	ardesia.h
 
-ardesia_LDFLAGS = 
+
+ardesia_LDFLAGS =
 
 if !PLATFORM_WIN32
 if WITH_GNU_LD

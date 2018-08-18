@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.4 -->
 <interface>
-  <!-- interface-requires gtk+ 3.0 -->
+  <requires lib="gtk+" version="3.0"/>
   <object class="GtkImage" id="addpdf">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -22,6 +23,11 @@
     <property name="valign">center</property>
     <property name="pixbuf">icons/blue.svg</property>
   </object>
+  <object class="GtkImage" id="clearIcon">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">icons/clear_16x16.png</property>
+  </object>
   <object class="GtkImage" id="eraser">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -35,13 +41,6 @@
     <property name="halign">center</property>
     <property name="valign">center</property>
     <property name="pixbuf">icons/filler.svg</property>
-  </object>
-  <object class="GtkImage" id="highlighter">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="halign">center</property>
-    <property name="valign">center</property>
-    <property name="pixbuf">icons/highlighter.svg</property>
   </object>
   <object class="GtkImage" id="green">
     <property name="visible">True</property>
@@ -57,7 +56,26 @@
     <property name="valign">center</property>
     <property name="pixbuf">icons/hand.svg</property>
   </object>
+  <object class="GtkImage" id="hide">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">icons/eye_closed_16x16.png</property>
+  </object>
+  <object class="GtkImage" id="highlighter">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="halign">center</property>
+    <property name="valign">center</property>
+    <property name="pixbuf">icons/highlighter.svg</property>
+  </object>
   <object class="GtkImage" id="media-record">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="halign">center</property>
+    <property name="valign">center</property>
+    <property name="pixbuf">icons/media-record.svg</property>
+  </object>
+  <object class="GtkImage" id="media-record1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="halign">center</property>
@@ -119,6 +137,11 @@
     <property name="valign">center</property>
     <property name="pixbuf">icons/photo-camera.svg</property>
   </object>
+  <object class="GtkImage" id="show">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">icons/eye_open_16x16.png</property>
+  </object>
   <object class="GtkImage" id="text">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -157,20 +180,21 @@
     <property name="has_focus">True</property>
     <property name="is_focus">True</property>
     <property name="events">GDK_LEAVE_NOTIFY_MASK</property>
+    <property name="opacity">0.90000000000000002</property>
     <property name="title">Ardesia</property>
-    <property name="resizable">False</property>
     <property name="destroy_with_parent">True</property>
     <property name="icon">icons/ardesia.png</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="skip_pager_hint">True</property>
     <property name="decorated">False</property>
     <property name="gravity">center</property>
-    <property name="opacity">0.90000000000000002</property>
+    <property name="has_resize_grip">True</property>
     <property name="startup_id">Ardesia</property>
-    <signal name="window-state-event" handler="on_bar_window_state_event" swapped="no"/>
     <signal name="configure-event" handler="on_bar_configure_event" swapped="no"/>
-    <signal name="leave-notify-event" handler="on_bar_leave_notify_event" swapped="no"/>
+    <signal name="destroy" handler="on_bar_quit" swapped="no"/>
     <signal name="enter-notify-event" handler="on_bar_enter_notify_event" swapped="no"/>
+    <signal name="leave-notify-event" handler="on_bar_leave_notify_event" swapped="no"/>
+    <signal name="window-state-event" handler="on_bar_window_state_event" swapped="no"/>
     <child>
       <object class="GtkVBox" id="toolboxMain">
         <property name="visible">True</property>
@@ -182,37 +206,19 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="toolbar_style">icons</property>
-            <property name="icon_size">1</property>
+            <property name="icon_size">2</property>
             <child>
-              <object class="GtkToolButton" id="buttonThick">
+              <object class="GtkToggleToolButton" id="buttomShowHide">
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Thickness</property>
+                <property name="tooltip_text" translatable="yes">Hide Annotations</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Hide</property>
                 <property name="use_underline">True</property>
-                <property name="label_widget">medium</property>
-                <signal name="clicked" handler="on_bar_thick_activate" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="buttonMode">
-                <property name="use_action_appearance">False</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Drawing Mode</property>
-                <property name="halign">center</property>
-                <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_underline">True</property>
-                <property name="label_widget">hand</property>
-                <signal name="clicked" handler="on_bar_mode_activate" swapped="no"/>
+                <property name="icon_widget">hide</property>
+                <signal name="clicked" handler="on_bar_showhide_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -224,7 +230,6 @@
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <child>
                   <object class="GtkVSeparator" id="undoSeparator">
                     <property name="visible">True</property>
@@ -234,6 +239,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -244,10 +250,10 @@
                 <property name="tooltip_text" translatable="yes">Undo</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Undo</property>
                 <property name="stock_id">gtk-undo</property>
-                <accelerator key="z" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                 <signal name="clicked" handler="on_bar_undo_activate" swapped="no"/>
+                <accelerator key="z" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -262,10 +268,10 @@
                 <property name="tooltip_text" translatable="yes">Redo</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Redo</property>
                 <property name="stock_id">gtk-redo</property>
-                <accelerator key="y" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                 <signal name="clicked" handler="on_bar_redo_activate" swapped="no"/>
+                <accelerator key="y" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -277,7 +283,6 @@
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <child>
                   <object class="GtkVSeparator" id="otherSeparator">
                     <property name="visible">True</property>
@@ -287,6 +292,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -297,8 +303,8 @@
                 <property name="tooltip_text" translatable="yes">Clear</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
-                <property name="stock_id">gtk-clear</property>
+                <property name="label" translatable="yes">Clear</property>
+                <property name="icon_widget">clearIcon</property>
                 <signal name="clicked" handler="on_bar_clear_activate" swapped="no"/>
               </object>
               <packing>
@@ -311,7 +317,6 @@
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <child>
                   <object class="GtkVSeparator" id="toolseparator">
                     <property name="visible">True</property>
@@ -321,6 +326,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -331,106 +337,11 @@
                 <property name="tooltip_text" translatable="yes">Mouse</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Default Pointer</property>
                 <property name="use_underline">True</property>
-                <property name="label_widget">pointer</property>
+                <property name="icon_widget">pointer</property>
                 <property name="group">buttonPencil</property>
                 <signal name="clicked" handler="on_bar_pointer_activate" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkRadioToolButton" id="buttonFiller">
-                <property name="use_action_appearance">False</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Filler</property>
-                <property name="halign">center</property>
-                <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_underline">True</property>
-                <property name="label_widget">filler</property>
-                <property name="group">buttonPencil</property>
-                <signal name="clicked" handler="on_bar_filler_activate" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkRadioToolButton" id="buttonArrow">
-                <property name="use_action_appearance">False</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Arrow</property>
-                <property name="halign">center</property>
-                <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_underline">True</property>
-                <property name="label_widget">arrow</property>
-                <property name="group">buttonPencil</property>
-                <signal name="clicked" handler="on_bar_arrow_activate" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkRadioToolButton" id="buttonText">
-                <property name="use_action_appearance">False</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Insert Text</property>
-                <property name="halign">center</property>
-                <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_underline">True</property>
-                <property name="label_widget">text</property>
-                <property name="group">buttonPencil</property>
-                <signal name="clicked" handler="on_bar_text_activate" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkRadioToolButton" id="buttonHighlighter">
-                <property name="use_action_appearance">False</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Highlighter</property>
-                <property name="halign">center</property>
-                <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_underline">True</property>
-                <property name="label_widget">highlighter</property>
-                <property name="group">buttonPencil</property>
-                <signal name="clicked" handler="on_bar_highlighter_activate" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkRadioToolButton" id="buttonEraser">
-                <property name="use_action_appearance">False</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Eraser</property>
-                <property name="halign">center</property>
-                <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_underline">True</property>
-                <property name="label_widget">eraser</property>
-                <property name="group">buttonPencil</property>
-                <signal name="clicked" handler="on_bar_eraser_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -445,10 +356,158 @@
                 <property name="tooltip_text" translatable="yes">Pencil</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Pencil</property>
                 <property name="use_underline">True</property>
-                <property name="label_widget">pencil</property>
+                <property name="icon_widget">pencil</property>
                 <signal name="clicked" handler="on_bar_pencil_activate" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioToolButton" id="buttonHighlighter">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Highlighter</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Highlighter</property>
+                <property name="use_underline">True</property>
+                <property name="icon_widget">highlighter</property>
+                <property name="group">buttonPencil</property>
+                <signal name="clicked" handler="on_bar_highlighter_activate" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioToolButton" id="buttonText">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Insert Text</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Text</property>
+                <property name="use_underline">True</property>
+                <property name="icon_widget">text</property>
+                <property name="group">buttonPencil</property>
+                <signal name="clicked" handler="on_bar_text_activate" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioToolButton" id="buttonArrow">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Arrow</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Arrow</property>
+                <property name="use_underline">True</property>
+                <property name="icon_widget">arrow</property>
+                <property name="group">buttonPencil</property>
+                <signal name="clicked" handler="on_bar_arrow_activate" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioToolButton" id="buttonFiller">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Filler</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Bucket Fill</property>
+                <property name="use_underline">True</property>
+                <property name="icon_widget">filler</property>
+                <property name="group">buttonPencil</property>
+                <signal name="clicked" handler="on_bar_filler_activate" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioToolButton" id="buttonEraser">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Eraser</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Eraser</property>
+                <property name="use_underline">True</property>
+                <property name="icon_widget">eraser</property>
+                <property name="group">buttonPencil</property>
+                <signal name="clicked" handler="on_bar_eraser_activate" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolItem" id="otherSeparatorItem1">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkVSeparator" id="otherSeparator1">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">False</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="buttonMode">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Drawing Mode</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Align to Shape</property>
+                <property name="use_underline">True</property>
+                <property name="icon_widget">hand</property>
+                <signal name="clicked" handler="on_bar_mode_activate" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="buttonThick">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Thickness</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Thickness</property>
+                <property name="use_underline">True</property>
+                <property name="icon_widget">medium</property>
+                <signal name="clicked" handler="on_bar_thick_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -460,7 +519,6 @@
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <child>
                   <object class="GtkVSeparator" id="colorSeparator">
                     <property name="visible">True</property>
@@ -470,21 +528,21 @@
               </object>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
-              <object class="GtkRadioToolButton" id="buttonBlue">
+              <object class="GtkRadioToolButton" id="buttonRed">
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Blue</property>
+                <property name="tooltip_text" translatable="yes">Red</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Red</property>
                 <property name="use_underline">True</property>
-                <property name="label_widget">blue</property>
-                <property name="group">buttonRed</property>
-                <signal name="clicked" handler="on_bar_blue_activate" swapped="no"/>
+                <property name="icon_widget">red</property>
+                <signal name="clicked" handler="on_bar_red_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -499,11 +557,30 @@
                 <property name="tooltip_text" translatable="yes">Green</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Green</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">green</property>
                 <property name="group">buttonRed</property>
                 <signal name="clicked" handler="on_bar_green_activate" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioToolButton" id="buttonBlue">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Blue</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Blue</property>
+                <property name="use_underline">True</property>
+                <property name="icon_widget">blue</property>
+                <property name="group">buttonRed</property>
+                <signal name="clicked" handler="on_bar_blue_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -518,29 +595,11 @@
                 <property name="tooltip_text" translatable="yes">Yellow</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Yellow</property>
                 <property name="use_underline">True</property>
-                <property name="label_widget">yellow</property>
+                <property name="icon_widget">yellow</property>
                 <property name="group">buttonRed</property>
                 <signal name="clicked" handler="on_bar_yellow_activate" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkRadioToolButton" id="buttonRed">
-                <property name="use_action_appearance">False</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Red</property>
-                <property name="halign">center</property>
-                <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_underline">True</property>
-                <property name="label_widget">red</property>
-                <signal name="clicked" handler="on_bar_red_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -555,9 +614,9 @@
                 <property name="tooltip_text" translatable="yes">White</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">White</property>
                 <property name="use_underline">True</property>
-                <property name="label_widget">white</property>
+                <property name="icon_widget">white</property>
                 <property name="group">buttonRed</property>
                 <signal name="clicked" handler="on_bar_white_activate" swapped="no"/>
               </object>
@@ -574,7 +633,7 @@
                 <property name="tooltip_text" translatable="yes">Color Chooser</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Select Color</property>
                 <property name="stock_id">gtk-select-color</property>
                 <property name="group">buttonRed</property>
                 <signal name="clicked" handler="on_bar_color_activate" swapped="no"/>
@@ -589,7 +648,6 @@
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="use_action_appearance">False</property>
                 <child>
                   <object class="GtkVSeparator" id="screenSeparator">
                     <property name="visible">True</property>
@@ -599,24 +657,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="buttonPreferences">
-                <property name="use_action_appearance">False</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Preferences</property>
-                <property name="halign">center</property>
-                <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-preferences</property>
-                <signal name="clicked" handler="on_bar_preferences_activate" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -627,28 +668,10 @@
                 <property name="tooltip_text" translatable="yes">Screenshot</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Screenshot</property>
                 <property name="use_underline">True</property>
-                <property name="label_widget">screenshoot</property>
+                <property name="icon_widget">screenshoot</property>
                 <signal name="clicked" handler="on_bar_screenshot_activate" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="buttonAddPdf">
-                <property name="use_action_appearance">False</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Add to pdf</property>
-                <property name="halign">center</property>
-                <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_underline">True</property>
-                <property name="label_widget">addpdf</property>
-                <signal name="clicked" handler="on_bar_add_pdf_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -663,10 +686,63 @@
                 <property name="tooltip_text" translatable="yes">Record</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Capture Screen</property>
                 <property name="use_underline">True</property>
-                <property name="label_widget">media-record</property>
+                <property name="icon_name">media-record</property>
                 <signal name="clicked" handler="on_bar_recorder_activate" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="buttonAddPdf">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Add to pdf</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Save to PDF</property>
+                <property name="use_underline">True</property>
+                <property name="icon_widget">addpdf</property>
+                <signal name="clicked" handler="on_bar_add_pdf_activate" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolItem" id="otherSeparatorItem2">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkVSeparator" id="otherSeparator2">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">False</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="buttonPreferences">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Preferences</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Preferences</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-preferences</property>
+                <signal name="clicked" handler="on_bar_preferences_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -681,8 +757,7 @@
                 <property name="tooltip_text" translatable="yes">Info</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
-                <property name="label" translatable="yes">info</property>
+                <property name="label" translatable="yes">About</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-info</property>
                 <signal name="clicked" handler="on_bar_info" swapped="no"/>
@@ -700,11 +775,11 @@
                 <property name="tooltip_text" translatable="yes">Quit</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Quit</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-quit</property>
-                <accelerator key="q" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                 <signal name="clicked" handler="on_bar_quit" swapped="no"/>
+                <accelerator key="q" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -714,11 +789,32 @@
           </object>
           <packing>
             <property name="expand">False</property>
-            <property name="fill">True</property>
+            <property name="fill">False</property>
             <property name="position">0</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkStatusbar" id="statusbar">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">10</property>
+            <property name="margin_right">10</property>
+            <property name="margin_start">10</property>
+            <property name="margin_end">10</property>
+            <property name="margin_top">6</property>
+            <property name="margin_bottom">6</property>
+            <property name="spacing">2</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
       </object>
+    </child>
+    <child type="titlebar">
+      <placeholder/>
     </child>
   </object>
 </interface>

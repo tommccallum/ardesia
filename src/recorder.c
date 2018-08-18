@@ -1,4 +1,4 @@
-/* 
+/*
  * Ardesia -- a program for painting on the screen
  * with this program you can play, draw, learn and teach
  * This program has been written such as a freedom sonet
@@ -10,12 +10,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -30,7 +30,8 @@
 #include <recorder.h>
 #include <utils.h>
 #include <keyboard.h>
-
+#include <ardesia.h>
+#include <annotation_window.h>
 
 /* pid of the recording process. */
 static GPid recorder_pid;
@@ -49,7 +50,23 @@ call_recorder (gchar *filename,
                gchar *option)
 {
   GPid pid = (GPid) 0;
-  gchar *argv[4] = {RECORDER_FILE, option, filename, (gchar *) 0};
+  gchar* pidfilename = g_strdup_printf("%s%s%s", g_get_tmp_dir (), G_DIR_SEPARATOR_S, "ardesia_recorder.pid");
+  gchar* logfilename = g_strdup_printf("%s%s%s", g_get_tmp_dir (), G_DIR_SEPARATOR_S, "ardesia_recorder.log");
+  gchar* quoted_filename = g_strdup_printf("%s", filename);
+  gchar* argv[9] = { RECORDER_FILE, option, logfilename,
+                    "0", "0", "100", "100",
+                    quoted_filename,
+                    (gchar *) 0
+                };
+
+  gint x=0,y=0;
+  gdk_window_get_root_origin( gtk_widget_get_window(annotation_data->annotation_window), &x, &y );
+  argv[3] = g_strdup_printf("%d",y);
+  argv[4] = g_strdup_printf("%d",x);
+  argv[5] = g_strdup_printf("%d",gtk_widget_get_allocated_width( annotation_data->annotation_window ));
+  argv[6] = g_strdup_printf("%d",gtk_widget_get_allocated_height( annotation_data->annotation_window ));
+
+  g_printf("call_recorder: %s %s %s %s %s %s\n", logfilename, argv[3], argv[4], argv[5], argv[6], argv[7]);
 
   if (
       g_spawn_async (NULL /*working_directory*/,
@@ -63,8 +80,36 @@ call_recorder (gchar *filename,
     {
       started = TRUE;
     }
+    g_free(logfilename);
+    g_free(quoted_filename);
+    g_free(argv[3]);
+    g_free(argv[4]);
+    g_free(argv[5]);
+    g_free(argv[6]);
 
-  return pid;
+
+    // wait 1 second and then check to see if /tmp/ardesia_recorder.pid exists
+    // if its does not then we failed to start VLC properly
+    gboolean pid_exists = file_exists( pidfilename );
+    int wait = 0;
+    if ( pid_exists == FALSE ) {
+        while( wait < 3 &&  pid_exists == FALSE ) {
+#ifdef _WIN32
+            sleep(1000);
+#else
+            sleep(1);
+#endif
+            pid_exists = file_exists( pidfilename );
+            wait++;
+        }
+    }
+
+    g_free(pidfilename);
+    if ( pid_exists == FALSE ) {
+        pid = -1;
+    }
+    g_printf("PID: %d\n", pid);
+    return pid;
 }
 
 
@@ -72,7 +117,12 @@ call_recorder (gchar *filename,
 gboolean
 is_recorder_available ()
 {
+#ifdef _WIN32
+  // dummy-quiet stops a dos command box from opening
   gchar *argv[5] = {"vlc", "-I", "dummy", "--dummy-quiet", (gchar *) 0};
+#else
+  gchar *argv[5] = {"vlc", "-I", "dummy", (gchar *) 0};
+#endif
 
 #ifdef _WIN32
   gchar *videolan = "\\VideoLAN\\VLC";
@@ -113,7 +163,7 @@ is_recorder_available ()
 gboolean
 is_started ()
 {
-  return started;
+  return started && recorder_pid > 0;
 }
 
 
@@ -139,7 +189,7 @@ void pause_recorder ()
 /* Resume the recorder. */
 void resume_recorder ()
 {
-  if (is_started ())
+  if (is_started () )
     {
       recorder_pid = call_recorder (NULL, "resume");
       paused = FALSE;
@@ -151,9 +201,9 @@ void resume_recorder ()
 void
 stop_recorder ()
 {
-  if (is_started ())
+  if (is_started () )
     {
-      g_spawn_close_pid (recorder_pid);
+      // g_spawn_close_pid (recorder_pid);
       recorder_pid = call_recorder (NULL, "stop");
       g_spawn_close_pid (recorder_pid);
       started = FALSE;
@@ -163,7 +213,7 @@ stop_recorder ()
 
 /* Missing program dialog. */
 void
-visualize_missing_recorder_program_dialog (GtkWindow *parent)
+visualize_missing_recorder_program_dialog (GtkWindow *parent, gchar* message)
 {
   GtkWidget *miss_dialog = (GtkWidget *) NULL;
 
@@ -171,7 +221,7 @@ visualize_missing_recorder_program_dialog (GtkWindow *parent)
                                         GTK_DIALOG_MODAL,
                                         GTK_MESSAGE_ERROR,
                                         GTK_BUTTONS_OK,
-                                        gettext ("In order to record with Ardesia you must install the vlc program and add it to the PATH environment variable"));
+                                        message);
 
   //gtk_window_set_keep_above (GTK_WINDOW (miss_dialog), TRUE);
 
@@ -201,9 +251,9 @@ gboolean start_save_video_dialog (GtkToolButton *toolbutton,
   GtkWidget *chooser = gtk_file_chooser_dialog_new (gettext ("Save video as ogv"),
                                                     parent,
                                                     GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                    GTK_STOCK_CANCEL,
+                                                    "_Cancel",
                                                     GTK_RESPONSE_CANCEL,
-                                                    GTK_STOCK_SAVE_AS,
+                                                    "Save _As",
                                                     GTK_RESPONSE_ACCEPT,
                                                     NULL);
 
@@ -224,7 +274,7 @@ gboolean start_save_video_dialog (GtkToolButton *toolbutton,
       gchar *filename_copy = (gchar *) NULL;
       g_free (filename);
       filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (chooser));
-      filename_copy = g_strdup_printf ("%s", filename); 
+      filename_copy = g_strdup_printf ("%s", filename);
 
       if (!g_str_has_suffix (filename, supported_extension))
         {
@@ -273,7 +323,9 @@ gboolean start_save_video_dialog (GtkToolButton *toolbutton,
 
   g_free (filename);
   filename = NULL;
+
+  if ( status == FALSE ) {
+      visualize_missing_recorder_program_dialog( parent, "VLC failed to start properly, check installation and logs.");
+  }
   return status;
 }
-
-

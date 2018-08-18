@@ -1,4 +1,4 @@
-/* 
+/*
  * Ardesia -- a program for painting on the screen
  * with this program you can play, draw, learn and teach
  * This program has been written such as a freedom sonet
@@ -10,18 +10,21 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
 /** Widget for text insertion */
+
+#ifndef __TEXT_WINDOW_H
+#define __TEXT_WINDOW_H
 
 #include <ctype.h>
 
@@ -57,9 +60,10 @@
 #  define TEXT_UI_FILE "..\\share\\ardesia\\ui\\text_window.glade"
 #else
 #  define TEXT_UI_FILE PACKAGE_DATA_DIR"/ardesia/ui/text_window.glade"
-#endif 
+#endif
 
-
+// Per character settings so we can extend the application to have
+// multiple characteristics.
 typedef struct
 {
 
@@ -67,9 +71,29 @@ typedef struct
 
   gdouble y;
 
-  gdouble x_bearing;
+  gchar* color;
 
-  gdouble y_bearing;
+  gchar* background_color;
+
+  gint pen_width; // width of normal text
+
+  gchar* character;
+
+  gchar* font_family; // e.g serif
+
+  guint font_size;
+
+  guint font_weight;
+
+  gboolean bold;
+
+  gboolean italics;
+
+  gboolean subscript;
+
+  gboolean superscript;
+
+  cairo_text_extents_t extents;
 
 } CharInfo;
 
@@ -112,8 +136,6 @@ typedef struct
 
   gboolean blink_show;
 
-  guint snooper_handler_id;
-
 }TextData;
 
 
@@ -123,14 +145,53 @@ typedef struct
   gchar *fontfamily;
   gint leftmargin;
   gint tabsize;
+  gint start_x;          // where first character will go
 }TextConfig;
 
+TextData *text_data;
+TextConfig *text_config;
+
+TextConfig*
+create_text_config();
+
+void
+make_cairo_context_for_text_window();
+
+cairo_t*
+create_new_text_window_context();
+
+cairo_t*
+create_copy_of_text_window_context(cairo_t* current_context) ;
+
+// void
+// render_draw_frame(cairo_t* source_context) ;
+
+void
+stop_timer              ();
+
+void
+start_blink_cursor();
+
+void
+stop_blink_cursor();
+
+void
+draw_test_text(cairo_t* cr, gchar* text);
+
+gboolean
+blink_cursor        (gpointer data);
+
+void
+save_text          ();
+
+void
+init_text_widget             (GtkWidget *widget);
 
 /* Start text widget. */
 void
-start_text_widget            (GtkWindow  *parent,
+start_text_widget            (GtkWidget  *parent,
                               gchar      *color,
-                              gint        tickness);
+                              gint        thickness);
 
 
 /* Stop text widget. */
@@ -138,3 +199,4 @@ void
 stop_text_widget        ();
 
 
+#endif //__TEXT_WINDOW_H

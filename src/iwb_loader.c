@@ -1,17 +1,17 @@
-/* 
- * Ardesia-- a program for painting on the screen 
+/*
+ * Ardesia-- a program for painting on the screen
  * Copyright (C) 2009 Pilolli Pietro <pilolli.pietro@gmail.com>
  *
  * Ardesia is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -37,7 +37,6 @@ add_background_image_reference (gchar   *project_tmp_dir,
   /* It is an image */
   gchar *background_path = "";
   background_path = g_build_filename (project_tmp_dir, href, (gchar *) 0);
-  set_background_type (2);
   update_background_image (background_path);
 }
 
@@ -97,13 +96,12 @@ add_background_color_reference (xmlXPathContextPtr  context,
 
   if (g_strcmp0 (rgba, "00000000") != 0)
     {
-       set_background_type (1);
        update_background_color (rgba);
     }
   else
-    { 
+    {
+    rgba = g_strdup_printf("000000FF");
        update_background_color (rgba);
-       set_background_color ("000000FF");
     }
 
 
@@ -149,14 +147,14 @@ load_savepoint_by_reference (GSList              *savepoint_list,
                              xmlChar             *ref)
 {
   xmlChar *xpath = (xmlChar *) g_strdup_printf ("/iwb/svg:svg/svg:image[@id='%s']", (gchar *) ref);
-  xmlXPathObjectPtr result = xmlXPathEvalExpression (xpath, context); 
+  xmlXPathObjectPtr result = xmlXPathEvalExpression (xpath, context);
   AnnotateSavepoint *savepoint = g_malloc ( (gsize) sizeof (AnnotateSavepoint));
   xmlNodePtr node = result->nodesetval->nodeTab[0];
   xmlChar *href = xmlGetProp (node, (xmlChar *) "href");
   g_free ((gchar *) xpath);
 
   savepoint->filename  = g_build_filename (project_tmp_dir, href, (gchar *) 0);
-  
+
   xmlFree (href);
 
   /* Add to the save-point list. */
@@ -212,7 +210,7 @@ decompress_iwb (gchar *iwbfile,
   GError   *err = (GError *) NULL;
   GsfInput   *input = (GsfInput *) NULL;
   GsfInfile  *infile = (GsfInfile *) NULL;
-  
+
   gsf_init ();
 
   input = gsf_input_stdio_new (iwbfile, &err);
@@ -268,7 +266,7 @@ load_savepoints_by_iwb (GSList             *savepoint_list,
       if (background)
         {
           if (g_strcmp0 ( (gchar *) background, "true") == 0)
-            { 
+            {
               load_background_by_reference (project_tmp_dir, context, ref);
               xmlFree (background);
             }
@@ -302,7 +300,7 @@ load_iwb (gchar *iwbfile)
   xmlXPathContextPtr context = (xmlXPathContextPtr) NULL;
 
   decompress_iwb (iwbfile, project_tmp_dir);
-  
+
   /* Initialize libxml. */
   xmlInitParser ();
 
@@ -328,7 +326,7 @@ load_iwb (gchar *iwbfile)
 
   if (context == NULL)
     {
-      xmlFreeDoc (doc); 
+      xmlFreeDoc (doc);
       printf ("Error: unable to create new XPath context\n");
       exit (EXIT_FAILURE);
     }
@@ -360,5 +358,3 @@ load_iwb (gchar *iwbfile)
 
   return savepoint_list;
 }
-
-
