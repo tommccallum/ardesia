@@ -119,9 +119,9 @@ is_recorder_available ()
 {
 #ifdef _WIN32
   // dummy-quiet stops a dos command box from opening
-  gchar *argv[5] = {"vlc", "-I", "dummy", "--dummy-quiet", (gchar *) 0};
+  gchar *argv[5] = {"vlc", "-I", "dummy", "--dummy-quiet", "vlc://quit", (gchar *) 0};
 #else
-  gchar *argv[5] = {"vlc", "-I", "dummy", (gchar *) 0};
+  gchar *argv[5] = {"vlc", "-I", "dummy", "vlc://quit", (gchar *) 0};
 #endif
 
 #ifdef _WIN32
