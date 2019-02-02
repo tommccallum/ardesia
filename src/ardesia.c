@@ -208,6 +208,7 @@ main                              (int    argc,
   background_window         = (GtkWidget *)     NULL;
   annotation_window         = (GtkWidget *)     NULL;
   workspace                 = (Workspace*)       NULL;
+  
 
   /* Enable the localization support with gettext. */
   enable_localization_support ();

@@ -32,6 +32,7 @@
 #include <keyboard.h>
 #include <ardesia.h>
 #include <annotation_window.h>
+#include <unistd.h>
 
 /* pid of the recording process. */
 static GPid recorder_pid;
@@ -241,7 +242,7 @@ visualize_missing_recorder_program_dialog (GtkWindow *parent, gchar* message)
  * This function take as input the recorder tool button in ardesia bar
  * return true is the recorder is started.
  */
-gboolean start_save_video_dialog (GtkToolButton *toolbutton,
+gboolean start_save_video_dialog (GtkButton *toolbutton,
                                   GtkWindow     *parent)
 {
   gboolean status = FALSE;
@@ -264,14 +265,29 @@ gboolean start_save_video_dialog (GtkToolButton *toolbutton,
 
   gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (chooser), get_project_dir ());
 
+  // test if ogv file already exists - if it does then add a number to the
+  // end - continue until new file can be made
+  gchar *supported_extension = ".ogv";
+  gchar *filename_copy = (gchar *) NULL;
+  gchar *filename_fullpath = (gchar*) NULL;
+  filename_copy = g_strdup_printf ("%s%s", filename, supported_extension);
+  filename_fullpath = g_strdup_printf( "%s%s%s", get_project_dir(), G_DIR_SEPARATOR_S, filename_copy);
+  gint counter = 1;
+  while( access( filename_fullpath, F_OK ) != -1 ) {
+        // file exists
+        filename_copy = g_strdup_printf ("%s_%d%s", filename, counter,supported_extension);
+        filename_fullpath = g_strdup_printf("%s%s%s", get_project_dir(), G_DIR_SEPARATOR_S, filename_copy);
+        counter ++;
+  }
+  filename = g_strdup_printf("%s", filename_copy);
+
   gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (chooser), filename);
 
   start_virtual_keyboard ();
 
   if (gtk_dialog_run (GTK_DIALOG (chooser)) == GTK_RESPONSE_ACCEPT)
     {
-      gchar *supported_extension = ".ogv";
-      gchar *filename_copy = (gchar *) NULL;
+
       g_free (filename);
       filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (chooser));
       filename_copy = g_strdup_printf ("%s", filename);

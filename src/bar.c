@@ -26,6 +26,14 @@
 #include <utils.h>
 #include <commandline.h>
 #include <bar.h>
+#include "annotation_window.h"
+#include "text_window.h"
+#include "background_window.h"
+
+/* Timer used to up-rise the window. */
+static gint timer = -1;
+
+
 
 BarData *bar_data = NULL;
 
@@ -278,4 +286,329 @@ create_bar_window (CommandLine *commandline,
 
 
   return bar_window;
+}
+
+
+GtkStatusbar* getStatusbar() {
+    GObject *g_object = gtk_builder_get_object (bar_gtk_builder, gettext("statusbar") );
+    return GTK_STATUSBAR( g_object );
+}
+
+void
+replace_status_message( gchar* message ) {
+    GtkStatusbar* bar = getStatusbar();
+    if ( bar != NULL ) {
+        //guint contextID = gtk_statusbar_get_context_id( bar, gettext("context description"));
+        gtk_statusbar_pop( bar, 0 );
+        gtk_statusbar_push( bar, 0, message );
+    }
+}
+
+void
+setStatusbarLabel( gchar* message ) {
+    GObject *g_object = gtk_builder_get_object (bar_gtk_builder, gettext("labelCurrentSelection") );
+    GtkLabel* label = GTK_LABEL( g_object );
+    gtk_label_set_label( label, gettext(message) );
+}
+/* Try to up-rise the window;
+ * this is used for the window manager
+ * that does not support the stay above directive.
+ */
+gboolean
+bar_to_top         (gpointer data)
+{
+  if (!gtk_widget_get_visible (GTK_WIDGET (data)))
+    {
+       gtk_window_present (GTK_WINDOW (data));
+       gtk_widget_grab_focus (data);
+       gdk_window_lower (gtk_widget_get_window (GTK_WIDGET (data)));
+    }
+  return TRUE;
+}
+
+
+/* Is the toggle tool button specified with name is active? */
+gboolean
+is_toggle_tool_button_active      (gchar *toggle_tool_button_name)
+{
+  GObject *g_object = gtk_builder_get_object (bar_gtk_builder, toggle_tool_button_name);
+  GtkToggleToolButton *toggle_tool_button = GTK_TOGGLE_TOOL_BUTTON (g_object);
+  return gtk_toggle_tool_button_get_active (toggle_tool_button);
+}
+
+/* Get GtkImage object from builder
+ * 2018-08-09: TM
+ */
+GtkImage* get_image_from_builder(gchar *image_name) {
+    GObject *g_object = gtk_builder_get_object (bar_gtk_builder, image_name);
+    GtkImage *image = GTK_IMAGE (g_object);
+    return image;
+}
+
+/* Is the show/hide toggle tool button active?
+ * 2018-08-09 : Added by TM
+ */
+// static
+// gboolean is_hide_toggle_tool_button_active    ()
+// {
+//   return is_toggle_tool_button_active ("buttonShowHide");
+// }
+
+/* Is the text toggle tool button active? */
+
+gboolean is_text_toggle_tool_button_active       ()
+{
+  return is_toggle_tool_button_active ("buttonText");
+}
+
+
+/* Is the highlighter toggle tool button active? */
+
+gboolean is_highlighter_toggle_tool_button_active          ()
+{
+  return is_toggle_tool_button_active ("buttonHighlighter");
+}
+
+
+/* Is the filler toggle tool button active? */
+
+gboolean is_filler_toggle_tool_button_active          ()
+{
+  return is_toggle_tool_button_active ("buttonFiller");
+}
+
+
+/* Is the eraser toggle tool button active? */
+
+gboolean is_eraser_toggle_tool_button_active     ()
+{
+  return is_toggle_tool_button_active ("buttonEraser");
+}
+
+
+/* Is the eraser toggle tool button active? */
+
+gboolean is_pen_toggle_tool_button_active     ()
+{
+  return is_toggle_tool_button_active ("buttonPencil");
+}
+
+
+/* Is the pointer toggle tool button active? */
+
+gboolean is_pointer_toggle_tool_button_active    ()
+{
+  return is_toggle_tool_button_active ("buttonPointer");
+}
+
+
+/* Is the pointer toggle tool button active? */
+
+gboolean is_arrow_toggle_tool_button_active      ()
+{
+  return is_toggle_tool_button_active ("buttonArrow");
+}
+
+
+/* Add alpha channel to build the RGBA string. */
+void
+add_alpha               (BarData *bar_data)
+{
+    assert(strlen(bar_data->color) == 8 );
+  if (is_highlighter_toggle_tool_button_active ())
+    {
+      strncpy (&bar_data->color[6], SEMI_OPAQUE_ALPHA, 2);
+    }
+  else
+    {
+      strncpy (&bar_data->color[6], OPAQUE_ALPHA, 2);
+    }
+}
+
+
+/* Select the pen tool. */
+void
+take_pen_tool           ()
+{
+  GObject *pencil_obj = gtk_builder_get_object (bar_gtk_builder, "buttonPencil");
+  GtkToggleToolButton *pencil_tool_button = GTK_TOGGLE_TOOL_BUTTON (pencil_obj);
+
+  /* Select the pen as default tool. */
+  if (is_eraser_toggle_tool_button_active ())
+    {
+      GObject *eraser_obj = gtk_builder_get_object (bar_gtk_builder, "buttonEraser");
+      GtkToggleToolButton *eraser_tool_button = GTK_TOGGLE_TOOL_BUTTON (eraser_obj);
+      gtk_toggle_tool_button_set_active (eraser_tool_button, FALSE);
+      gtk_toggle_tool_button_set_active (pencil_tool_button, TRUE);
+    }
+
+  if (is_pointer_toggle_tool_button_active ())
+    {
+      GObject *pointer_obj = gtk_builder_get_object (bar_gtk_builder, "buttonPointer");
+      GtkToggleToolButton *pointer_tool_button = GTK_TOGGLE_TOOL_BUTTON (pointer_obj);
+      gtk_toggle_tool_button_set_active (pointer_tool_button, FALSE);
+      gtk_toggle_tool_button_set_active (pencil_tool_button, TRUE);
+    }
+
+  if (is_filler_toggle_tool_button_active ())
+    {
+      GObject *filler_obj = gtk_builder_get_object (bar_gtk_builder, "buttonFiller");
+      GtkToggleToolButton *filler_tool_button = GTK_TOGGLE_TOOL_BUTTON (filler_obj);
+      gtk_toggle_tool_button_set_active (filler_tool_button, FALSE);
+      gtk_toggle_tool_button_set_active (pencil_tool_button, TRUE);
+    }
+}
+
+
+/* Release to lock the mouse */
+void
+release_lock                 (BarData *bar_data)
+{
+  if (bar_data->grab)
+    {
+      /* Lock enabled. */
+      bar_data->grab = FALSE;
+      annotate_release_grab ();
+
+      /* Try to up-rise the window. */
+      timer = g_timeout_add (BAR_TO_TOP_TIMEOUT, bar_to_top, get_annotation_window());
+#ifdef _WIN32 // WIN32
+      if (gtk_window_get_opacity (GTK_WINDOW (get_annotation_window ()))!=0)
+        {
+          /*
+           * @HACK This allow the mouse input go below the window putting
+           * the opacity to 0; when will be found a better way to make
+           * the window transparent to the the pointer input we might
+           * remove the previous hack.
+           * @TODO Transparent window to the pointer input in a better way.
+           */
+           gtk_window_set_opacity (GTK_WINDOW (get_annotation_window ()), 0);
+        }
+#endif
+
+    }
+}
+
+
+/* Lock the mouse. */
+void
+lock (BarData *bar_data)
+{
+  if (! bar_data->grab)
+    {
+      // Unlock
+      bar_data->grab = TRUE;
+
+      /* delete the old timer */
+      if (timer!=-1)
+        {
+          g_source_remove (timer);
+          timer = -1;
+        }
+
+#ifdef _WIN32 // WIN32
+
+      /*
+       * @HACK Deny the mouse input to go below the window putting the opacity greater than 0
+       * @TODO remove the opacity hack when will be solved the next todo.
+       */
+      if (gtk_window_get_opacity (GTK_WINDOW (get_background_window ()))==0)
+        {
+          gtk_window_set_opacity (GTK_WINDOW (get_background_window ()), BACKGROUND_OPACITY);
+        }
+#endif
+    }
+}
+
+
+/* Set color; this is called each time that the user want change color. */
+void
+set_color                    (BarData  *bar_data,
+                              gchar    *selected_color)
+{
+  take_pen_tool ();
+  lock (bar_data);
+  assert( strlen(selected_color) >= 6  );
+  strncpy (bar_data->color, selected_color, 6);
+  annotate_set_color (bar_data->color);
+}
+
+
+/* Pass the options to the annotation window. */
+void set_options      (BarData *bar_data)
+{
+
+  annotate_set_rectifier (bar_data->rectifier);
+
+  annotate_set_rounder (bar_data->rounder);
+
+  annotate_set_thickness (bar_data->thickness);
+
+  annotate_set_arrow (is_arrow_toggle_tool_button_active ());
+
+  if (is_pen_toggle_tool_button_active ()         ||
+      is_highlighter_toggle_tool_button_active () ||
+      is_arrow_toggle_tool_button_active ())
+    {
+      annotate_set_color (bar_data->color);
+      annotate_select_pen ();
+    }
+  else if (is_eraser_toggle_tool_button_active ())
+    {
+      annotate_select_eraser ();
+    }
+
+}
+
+
+
+
+
+
+/* Start to paint with the selected tool. */
+void
+start_tool                   (BarData *bar_data)
+{
+  if (bar_data->grab)
+    {
+        annotate_release_grab (); // release the old cursor
+        annotate_acquire_grab (); // grab the pointer again so that button release will respond
+
+      if (is_text_toggle_tool_button_active ())
+        {
+          /* Text button then start the text widget. */
+          start_text_widget (annotation_data->annotation_window,
+                             bar_data->color,
+                             bar_data->thickness);
+        }
+      else
+        {
+            // this call is required as the leave event for the bar occurs
+            // when we enter the toolbar object
+            stop_text_widget();
+          /* Is an other tool for paint or erase. */
+          set_options (bar_data);
+        }
+
+    }
+}
+
+gboolean end_clapperboad_countdown(gpointer user_data) {
+    g_print("END on_clapperboard_click");
+    gboolean grab_value = bar_data->grab;
+    bar_data->grab = FALSE;
+    annotate_release_grab ();
+
+    // ideally we want to go back to our background settings that we had before
+    annotation_data->is_clapperboard_visible = FALSE;
+
+    // make the screen black and then go back to what it was before
+    bar_data->grab = grab_value;
+    start_tool (bar_data);
+    gtk_widget_queue_draw(annotation_data->annotation_window);
+    return FALSE;
+}
+
+void begin_clapperboard_countdown() {
+    timer = g_timeout_add (BAR_TO_TOP_TIMEOUT, end_clapperboad_countdown, NULL);
 }

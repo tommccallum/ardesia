@@ -86,7 +86,9 @@ ardesia_SOURCES = \
     monitor.c                           \
     commandline.c                           \
 	ardesia.c                                 \
-	ardesia.h
+	ardesia.h                          \
+    recordingstudio.c                   \
+    recordingstudio.h
 
 
 ardesia_LDFLAGS =

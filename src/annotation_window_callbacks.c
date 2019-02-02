@@ -325,6 +325,13 @@ on_expose          (GtkWidget *widget,
         }
     }
 
+    // draw clapperboard on top of everything else
+    if ( annotation_data->is_clapperboard_visible == TRUE ) {
+        if ( annotation_data->clapperboard_cairo_context ) {
+            draw_cairo_context( cr, annotation_data->clapperboard_cairo_context );
+        }
+    }
+
   return TRUE;
 }
 

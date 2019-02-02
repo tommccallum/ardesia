@@ -220,18 +220,18 @@ annotate_acquire_input_grab  ()
 
 /* Destroy cairo context. */
 static void
-destroy_cairo           ()
+destroy_cairo           (cairo_t* ctxt)
 {
-  guint refcount =  (guint) cairo_get_reference_count (annotation_data->annotation_cairo_context);
+  guint refcount =  (guint) cairo_get_reference_count (ctxt);
 
   guint i = 0;
 
   for  (i=0; i<refcount; i++)
     {
-      cairo_destroy (annotation_data->annotation_cairo_context);
+      cairo_destroy (ctxt);
     }
 
-  annotation_data->annotation_cairo_context = (cairo_t *) NULL;
+  ctxt = (cairo_t *) NULL;
 }
 
 
@@ -493,15 +493,17 @@ make_annotation_window_transparent() {
 void
 position_annotation_window          ( int x, int y, int width, int height )
 {
-    g_printf("setting annotation window position %d %d %d %d\n", x, y, width, height);
-  gtk_window_move( GTK_WINDOW(annotation_data->annotation_window) , x, y );
+    if ( annotation_data->annotation_window != NULL ) {
+        g_printf("setting annotation window position %d %d %d %d\n", x, y, width, height);
+      gtk_window_move( GTK_WINDOW(annotation_data->annotation_window) , x, y );
 
-  gtk_window_set_keep_above (GTK_WINDOW (annotation_data->annotation_window), TRUE);
+      gtk_window_set_keep_above (GTK_WINDOW (annotation_data->annotation_window), TRUE);
 
-  make_annotation_window_transparent();
+      make_annotation_window_transparent();
 
-  gtk_widget_set_size_request (annotation_data->annotation_window, width, height );
-  gtk_widget_show_all (annotation_data->annotation_window);
+      gtk_widget_set_size_request (annotation_data->annotation_window, width, height );
+      gtk_widget_show_all (annotation_data->annotation_window);
+    }
 
 }
 
@@ -1401,12 +1403,25 @@ annotate_quit           ()
       cursors_main_quit ();
 
       /* Destroy cairo object. */
-      destroy_cairo ();
+      destroy_cairo (annotation_data->annotation_cairo_context);
 
       if (annotation_data->invisible_cursor)
         {
           g_object_unref (annotation_data->invisible_cursor);
           annotation_data->invisible_cursor = (GdkCursor *) NULL;
+        }
+
+        if ( annotation_data->clapperboard_cairo_context ) {
+            destroy_cairo( annotation_data->clapperboard_cairo_context );
+        }
+
+        if ( annotation_data->recordingstudio_options) {
+            g_free( annotation_data->recordingstudio_options);
+        }
+
+        if ( annotation_data->recordingstudio_window) {
+            gtk_widget_destroy (annotation_data->recordingstudio_window);
+            annotation_data->recordingstudio_window = (GtkWidget *) NULL;
         }
 
       /* Free all. */
@@ -1603,6 +1618,19 @@ create_annotation_data() {
     annotation_data->cur_context = annotation_data->default_pen;
     annotation_data->monitor = NULL;
 
+    annotation_data->recordingstudio_window_gtk_builder = NULL;
+    annotation_data->recordingstudio_window = NULL;
+    annotation_data->recordingstudio_options = NULL;
+
+    annotation_data->clapperboard_cairo_context = NULL;
+    annotation_data->is_clapperboard_visible = FALSE;
+
+    annotation_data->cursor_window_gtk_builder = NULL;
+    annotation_data->cursor_window = NULL;
+    annotation_data->is_cursor_visible = FALSE;
+    annotation_data->cursor_timer = 0;
+    annotation_data->cursor_step = 0;
+    
     // we create background data objects at the same time
     // to be safe
     background_data = create_background_data();

@@ -40,7 +40,7 @@
  * return true is the recorder is started.
  */
 gboolean
-start_save_video_dialog (GtkToolButton *toolbutton,
+start_save_video_dialog (GtkButton *toolbutton,
                          GtkWindow     *parent);
 
 

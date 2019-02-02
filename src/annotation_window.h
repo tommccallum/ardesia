@@ -30,6 +30,7 @@
 
 #include <cairo.h>
 #include <ardesia.h>
+#include "recordingstudio.h"
 
 #ifdef _WIN32
 #  include <cairo-win32.h>
@@ -51,6 +52,8 @@
 #else
 #  define ANNOTATION_UI_FOLDER PACKAGE_DATA_DIR"/ardesia/ui"
 #  define ANNOTATION_UI_FILE ANNOTATION_UI_FOLDER"/annotation_window.glade"
+#  define RECORDINGSTUDIO_UI_FILE ANNOTATION_UI_FOLDER"/recordingstudio_window.glade"
+#  define CURSOR_UI_FILE ANNOTATION_UI_FOLDER"/cursor_window.glade"
 #endif
 
 
@@ -119,6 +122,21 @@ typedef struct
   /* The annotation window. */
   GtkWidget *annotation_window;
 
+  /* the recording studio child window */
+  GtkBuilder * recordingstudio_window_gtk_builder;
+  GtkWidget *recordingstudio_window;
+
+  /* Associated data */
+  RecordingStudioData *recordingstudio_options;
+  cairo_t *clapperboard_cairo_context;
+  gboolean is_clapperboard_visible;
+
+  // cursor window
+  GtkBuilder * cursor_window_gtk_builder;
+  GtkWidget *cursor_window;
+  gboolean is_cursor_visible;
+  gint cursor_timer;
+  gint cursor_step;
   /* The cairo context attached to the window. */
   cairo_t *annotation_cairo_context;
 

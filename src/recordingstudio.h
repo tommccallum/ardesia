@@ -20,18 +20,19 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifndef RECORDINGSTUDIO_H
+#define RECORDINGSTUDIO_H
 
-
+#include <config.h>
+#include <glib.h>
+#include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
+/* Structure that contains the info passed to the callbacks. */
+typedef struct
+{
+ gboolean recording;
+ gboolean cursor_visible;
+} RecordingStudioData;
 
-
-/* 2018-08-09 : Added by TM */
-#define HIDE 0
-#define SHOW 1
-
-
-GtkStatusbar* getStatusbar();
-
-void replace_status_message( gchar* message );
-void setStatusbarLabel( gchar* message );
+#endif // RECORDINGSTUDIO_H

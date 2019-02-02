@@ -22,7 +22,9 @@ ui_DATA = vertical_bar.glade              \
 	  background_window.glade         \
 	  share_confirmation_dialog.glade \
 	  text_window.glade               \
-	  info_dialog.glade
+	  info_dialog.glade				  \
+	  recordingstudio_window.glade	\
+	  cursor_window.glade
 
 desktopdir = $(datadir)/applications
 desktop_in_files = ardesia.desktop.in
@@ -35,16 +37,16 @@ pixmap_DATA = icons/ardesia.png
 
 
 install-data-local:
-	mkdir -p $(DESTDIR)$(uiiconsdir) 
-	cp iwb-mime.xml $(DESTDIR)$(uidir) 
-	cp -r icons/* $(DESTDIR)$(uiiconsdir) 
-	mkdir -p $(DESTDIR)$(uibackgroundsdir) 
-	cp -r backgrounds/* $(DESTDIR)$(uibackgroundsdir) 
-	mkdir -p $(DESTDIR)$(scriptsdir) 
+	mkdir -p $(DESTDIR)$(uiiconsdir)
+	cp iwb-mime.xml $(DESTDIR)$(uidir)
+	cp -r icons/* $(DESTDIR)$(uiiconsdir)
+	mkdir -p $(DESTDIR)$(uibackgroundsdir)
+	cp -r backgrounds/* $(DESTDIR)$(uibackgroundsdir)
+	mkdir -p $(DESTDIR)$(scriptsdir)
 if !PLATFORM_WIN32
-	cp -r scripts/*.sh $(DESTDIR)$(scriptsdir) 
+	cp -r scripts/*.sh $(DESTDIR)$(scriptsdir)
 else
-	cp -r scripts/*.bat $(DESTDIR)$(scriptsdir) 
+	cp -r scripts/*.bat $(DESTDIR)$(scriptsdir)
 endif
 	chmod a+x $(DESTDIR)$(scriptsdir)/*
 
@@ -57,8 +59,8 @@ endif
 
 # Remove ui directory on uninstall
 uninstall-local:
-	rm -fr $(uiiconsdir) 
-	rm -fr $(uibackgroundsdir) 
+	rm -fr $(uiiconsdir)
+	rm -fr $(uibackgroundsdir)
 	@if test x"$(XDG_UTILS)" != x; then                                                                                                          \
 		echo "Deregister iwb mimetype";                                                                                                        \
 		xdg-icon-resource uninstall --mode user --novendor --context mimetypes --size 48 $(DESTDIR)$(uiiconsdir)/application-x-iwb.png;        \

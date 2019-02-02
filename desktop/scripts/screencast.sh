@@ -38,8 +38,6 @@ RECORDER_PID_FILE=/tmp/ardesia_recorder.pid
 
 
 
-
-
 if [ "${ACTION}" = "start" ]
 then
     echo "Ardesia passed the following options:" > $LOG
