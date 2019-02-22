@@ -35,6 +35,7 @@
 #include <text_window.h>
 #include <text_window_callbacks.h>
 #include <cairo_functions.h>
+#include <bar.h>
 
 
 
@@ -290,7 +291,101 @@ on_screen_changed       (GtkWidget  *widget,
 }
 
 
+void
+cut_out_window_holes(cairo_t* cr)
+{
+    if ( cr == NULL ) return;
 
+    gint x=0, y=0, width=0, height=0;
+    GdkRectangle* rB =NULL;
+    gint ann_width=0, ann_height=0, ann_x=0, ann_y=0;
+    gtk_window_get_position (GTK_WINDOW (annotation_data->annotation_window), &ann_x, &ann_y);
+    gtk_window_get_size (GTK_WINDOW (annotation_data->annotation_window), &ann_width, &ann_height);
+    // enclosing path
+    //cairo_new_sub_path(cr);
+    cairo_new_path(cr);
+    //cairo_rectangle( cr, ann_x, ann_y, ann_width, ann_height );
+
+    GdkRectangle* rA = g_new( GdkRectangle, 1 );
+    rA->x = ann_x;
+    rA->y = ann_y;
+    rA->width = ann_width;
+    rA->height = ann_height;
+
+    GtkWidget *bar= get_bar_widget();
+
+    if ( bar != NULL ) {
+        gtk_window_get_position (GTK_WINDOW (bar), &x, &y);
+        gtk_window_get_size (GTK_WINDOW (bar), &width, &height);
+
+        rB = g_new( GdkRectangle, 1 );
+        rB->x = x;
+        rB->y = y;
+        rB->width = width;
+        rB->height = height;
+
+        if ( intersect( rA, rB ) == TRUE ) {
+          cairo_new_sub_path(cr);
+          cairo_rectangle( cr, x+1-ann_x, y+1-ann_y, width-1, height-1 );
+          g_printf("making hole for bar - intersect was true\n");
+          g_printf("%d %d %d %d\n", x-ann_x, y-ann_y, width, height );
+        }
+        g_free( rB );
+        rB = NULL;
+    }
+
+  // we also want to drill down other windows if they too are visible
+  if ( annotation_data->background_selection_window != NULL ) {
+      gtk_window_get_position (GTK_WINDOW (annotation_data->background_selection_window), &x, &y);
+      gtk_window_get_size (GTK_WINDOW (annotation_data->background_selection_window), &width, &height);
+      rB = g_new( GdkRectangle, 1 );
+      rB->x = x;
+      rB->y = y;
+      rB->width = width;
+      rB->height = height;
+      if ( intersect( rA, rB ) == TRUE ) {
+          g_printf("making hole for background selection window - intersect was true\n");
+          g_printf("%d %d %d %d\n", x-ann_x, y-ann_y, width, height );
+          cairo_new_sub_path(cr);
+          cairo_rectangle( cr, x-ann_x, y-ann_y, width, height );
+      }
+      g_free( rB );
+      rB = NULL;
+  }
+
+  if ( annotation_data->font_window != NULL ) {
+      gtk_window_get_position (GTK_WINDOW (annotation_data->font_window), &x, &y);
+      gtk_window_get_size (GTK_WINDOW (annotation_data->font_window), &width, &height);
+      rB = g_new( GdkRectangle, 1 );
+      rB->x = x;
+      rB->y = y;
+      rB->width = width;
+      rB->height = height;
+      if ( intersect( rA, rB ) == TRUE ) {
+          g_printf("making hole for font selection window - intersect was true\n");
+          g_printf("%d %d %d %d\n", x-ann_x, y-ann_y, width, height );
+          cairo_new_sub_path(cr);
+          cairo_rectangle( cr, x-ann_x, y-ann_y, width, height );
+      }
+      g_free( rB );
+      rB = NULL;
+  }
+
+  // draw in reverse
+  cairo_new_sub_path(cr);
+  cairo_move_to(cr, ann_width, 0);
+  cairo_line_to(cr, 0, 0);
+  cairo_line_to(cr, 0, ann_width);
+  cairo_line_to(cr, ann_width, ann_height);
+  cairo_close_path(cr);
+
+  if ( rA != NULL ) {
+      g_free( rA );
+  }
+  if ( rB != NULL ) {
+      g_free( rB );
+  }
+}
 
 /* Expose event: this occurs when the window is shown.
  */
@@ -301,36 +396,84 @@ on_expose          (GtkWidget *widget,
 {
     AnnotateData *annotation_data = (AnnotateData *) user_data;
 
- g_printerr ("DEBUG: Annotation window get draw event\n");
-
+    g_print("DEBUG: Annotation window get draw event (grab: %d)\n", bar_data->grab);
+    gboolean use_paint = TRUE;
     clear_cairo_context( cr ); // blank the current window for repainting
+
+    // make sure windows are just underneath for this to work
+    if ( bar_data->grab == FALSE && annotation_data->is_background_visible == TRUE  ) {
+        // @TODO this causes flicker so only want to do it if the windows have moved
+        //          or pointer has just been selected
+        //       add a new flag to annotation_window to mark request for redraw
+        // @TODO fix issue that window decorations are not picked up by allocated size
+        //          -- this may require a call to the x-server if available
+        // @TODO fix issue that image not updated as window is dragged across screen
+        //          -- this needs to know what event is called for window drag, may be mousemove
+
+        gtk_window_present (GTK_WINDOW (get_bar_widget ()));
+        if ( annotation_data->background_selection_window != NULL ) {
+            g_printf("presenting background selection window\n");
+            gtk_window_present (GTK_WINDOW (annotation_data->background_selection_window));
+        }
+        if ( annotation_data->font_window != NULL ) {
+            g_printf("presenting font window\n");
+            gtk_window_present (GTK_WINDOW (annotation_data->font_window));
+        }
+
+        // if we are not grabbed then make transparent the region that is over the windows
+        // these would have been cut out for clicks earlier
+        // we want to set the clip first
+        cut_out_window_holes(cr);
+        use_paint = FALSE;
+    } else {
+        gint ann_width=0, ann_height=0, ann_x=0, ann_y=0;
+        gtk_window_get_position (GTK_WINDOW (annotation_data->annotation_window), &ann_x, &ann_y);
+        gtk_window_get_size (GTK_WINDOW (annotation_data->annotation_window), &ann_width, &ann_height);
+        cairo_rectangle( cr, ann_x, ann_y, ann_width, ann_height );
+        use_paint = TRUE;
+    }
+
+
+//    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+
+//     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+    //cairo_rectangle(cr, 10,10, 50, 50);
+    // cairo_set_source_rgba(cr,1,1,0,1);
+    // cairo_fill_preserve(cr); // paint does not observe paths
+    // cairo_surface_write_to_png( cairo_get_target(cr), "path.png");
+//     cairo_fill_preserve(cr);
+// return FALSE;
+
 
     if ( annotation_data->is_background_visible == TRUE ) {
         // draw background layer on context cr
         if ( background_data->cr ) {
-            draw_cairo_context( cr, background_data->cr );
+            draw_cairo_context( cr, background_data->cr,use_paint  );
         }
     }
 
     if ( annotation_data->is_annotation_visible == TRUE ) {
+        g_printf("316: annotation_window_callbacks\n");
         // draw annotation layer on context cr
         initialize_annotation_cairo_context (annotation_data);
-        draw_cairo_context( cr, annotation_data->annotation_cairo_context );
+        draw_cairo_context( cr, annotation_data->annotation_cairo_context,use_paint  );
     }
 
     if ( annotation_data->is_text_editor_visible == TRUE ) {
         if ( text_data->cr ) {
             // draw the text editor layer
-            draw_cairo_context( cr, text_data->cr );
+            draw_cairo_context( cr, text_data->cr,use_paint  );
         }
     }
 
     // draw clapperboard on top of everything else
     if ( annotation_data->is_clapperboard_visible == TRUE ) {
         if ( annotation_data->clapperboard_cairo_context ) {
-            draw_cairo_context( cr, annotation_data->clapperboard_cairo_context );
+            draw_cairo_context( cr, annotation_data->clapperboard_cairo_context,use_paint  );
         }
     }
+
+
 
   return TRUE;
 }
@@ -347,7 +490,7 @@ on_button_press    (GtkWidget      *win,
                     GdkEventButton *ev,
                     gpointer        user_data)
 {
-
+g_printf("annotation_window:: on_button_press\n");
   AnnotateData *data = (AnnotateData *) user_data;
   gboolean retval = FALSE;
 

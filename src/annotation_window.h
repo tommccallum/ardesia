@@ -54,6 +54,8 @@
 #  define ANNOTATION_UI_FILE ANNOTATION_UI_FOLDER"/annotation_window.glade"
 #  define RECORDINGSTUDIO_UI_FILE ANNOTATION_UI_FOLDER"/recordingstudio_window.glade"
 #  define CURSOR_UI_FILE ANNOTATION_UI_FOLDER"/cursor_window.glade"
+#  define PAPER_BACKGROUND_FILE ANNOTATION_UI_FOLDER"/backgrounds/notebook_paper.png"
+#  define TRANSPARENT_BACKGROUND_FILE ANNOTATION_UI_FOLDER"/icons/desktop_transparent.png"
 #endif
 
 
@@ -66,7 +68,7 @@ typedef enum
     ANNOTATE_ERASER,
 
     ANNOTATE_FILLER,
-
+    ANNOTATE_POINTER
   } AnnotatePaintType;
 
 
@@ -104,6 +106,21 @@ typedef struct
   guint        state;
 } AnnotateDeviceData;
 
+// Background selection
+#define BACKGROUND_NONE_SELECTED -1
+#define BACKGROUND_MODE_NONE 0
+#define BACKGROUND_MODE_FILE 1
+#define BACKGROUND_MODE_COLOR 2
+
+typedef struct
+{
+    gint mode;
+    gchar* filename;
+    gchar* color;
+    GtkToolItem* button;
+    gint index;
+    gint size;
+}   BackgroundButtonData;
 
 /* Annotation data used by the callbacks. */
 typedef struct
@@ -137,6 +154,16 @@ typedef struct
   gboolean is_cursor_visible;
   gint cursor_timer;
   gint cursor_step;
+
+  // background window information
+  GtkWidget* background_selection_window;
+  GtkWidget* background_selection_container;
+  GSList* background_button_data; // colour, transparent or filename
+  gint background_button_last_selected; // last background item selected, -1 if not
+
+  gfloat highlighter_multipler;
+  gfloat eraser_multiplier;
+
   /* The cairo context attached to the window. */
   cairo_t *annotation_cairo_context;
 
@@ -204,6 +231,8 @@ typedef struct
   /* Pen color. */
   gchar *color;
 
+  GtkWidget* font_window;
+  PangoFontDescription* font;
 
   /* monitor */
   Monitor* monitor;
@@ -459,5 +488,8 @@ annotation_window_mouse_move( GdkEventMotion* ev, AnnotateData* data ) ;
 
 gboolean
 annotation_window_button_release( GdkEventButton* ev, AnnotateData* data);
+
+void
+create_text_settings_window();
 
 #endif

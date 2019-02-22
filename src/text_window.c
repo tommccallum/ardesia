@@ -378,7 +378,7 @@ create_text_data() {
         text_data->timer = -1;
         text_data->blink_show = TRUE;
         text_data->color =  "FF0000FF";
-        text_data->pen_width = 12;
+        text_data->pen_width = 1;
     }
 }
 

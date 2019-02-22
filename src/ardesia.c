@@ -208,7 +208,7 @@ main                              (int    argc,
   background_window         = (GtkWidget *)     NULL;
   annotation_window         = (GtkWidget *)     NULL;
   workspace                 = (Workspace*)       NULL;
-  
+
 
   /* Enable the localization support with gettext. */
   enable_localization_support ();
@@ -247,6 +247,8 @@ main                              (int    argc,
   //gtk_window_move( GTK_WINDOW(ardesia_bar_window), toolMonitor->rect->x, 0 );
 
   replace_status_message(g_strdup_printf("Project started in %s", workspace->project_dir));
+
+  create_text_settings_window();
 
   // main loop for a GTK application
   gtk_main ();

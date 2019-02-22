@@ -11,7 +11,7 @@ TOP="$3"
 LEFT="$4"
 WIDTH="$5"
 HEIGHT="$6"
-
+PIDFILENAME="$8"
 
 RECORDER_PROGRAM="cvlc"
 
@@ -34,7 +34,7 @@ ICECAST_PORT=8000
 ICECAST_MOUNTPOINT=ardesia.ogg
 
 SCRIPT_FOLDER=`dirname "$0"`
-RECORDER_PID_FILE=/tmp/ardesia_recorder.pid
+RECORDER_PID_FILE=$PIDFILENAME
 
 
 

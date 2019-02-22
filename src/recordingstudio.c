@@ -13,10 +13,45 @@
 #include "cairo_functions.h"
 #include "recorder.h"
 
+// As the toggle button fires the event when we reset the button during
+// on_stop_recording_click, we set this global to be picked up by on_record_click
+// and if TRUE then we ignore that event.
+static gboolean on_stop_recording_called = FALSE;
+
+/**
+ * Stop the recording completely instead of pausing
+ * @param  toolbutton [description]
+ * @param  func_data  [description]
+ * @return            [description]
+ */
+G_MODULE_EXPORT void
+on_stop_recording_click            (GtkButton   *toolbutton,
+                                   gpointer         func_data)
+{
+    g_print("on_stop_recording_click\n");
+    on_stop_recording_called = TRUE;
+    gboolean grab_value = bar_data->grab;
+    annotate_release_grab ();
+    bar_data->grab = FALSE;
+    stop_recorder();
+
+    //reset icon on record button
+    GtkToggleButton* recordButton = GTK_TOGGLE_BUTTON( gtk_builder_get_object( annotation_data->recordingstudio_window_gtk_builder, "record" ) );
+    gtk_toggle_button_set_active( recordButton, FALSE );
+    GtkWidget* imageWidget = GTK_WIDGET( gtk_builder_get_object( annotation_data->recordingstudio_window_gtk_builder, "media-record" ) );
+    gtk_button_set_image( (GtkButton*) recordButton, imageWidget );
+    gtk_button_set_label( (GtkButton*) recordButton, "Record" );
+
+    bar_data->grab = grab_value;
+    on_stop_recording_called = FALSE;
+    start_tool (bar_data);
+}
+
 G_MODULE_EXPORT void
 on_record_click            (GtkToggleButton   *toolbutton,
                                    gpointer         func_data)
 {
+    if ( on_stop_recording_called ) return;
     g_print("on_recording_click\n");
     gboolean grab_value = bar_data->grab;
 
@@ -36,7 +71,7 @@ on_record_click            (GtkToggleButton   *toolbutton,
             /* Put the stop icon. */
             GtkWidget* imageWidget = GTK_WIDGET( gtk_builder_get_object( annotation_data->recordingstudio_window_gtk_builder, "media-playback-stop" ) );
             gtk_button_set_image( (GtkButton*) toolbutton, imageWidget );
-            gtk_button_set_label( (GtkButton*) toolbutton, "Stop" );
+            gtk_button_set_label( (GtkButton*) toolbutton, "Pause" );
             //gtk_tool_button_set_icon_name (toolbutton, "media-playback-stop");
           }
         else
@@ -95,7 +130,7 @@ on_record_click            (GtkToggleButton   *toolbutton,
             //gtk_tool_button_set_icon_name(toolbutton, gettext("media-playback-stop") );
             GtkWidget* imageWidget = GTK_WIDGET( gtk_builder_get_object( annotation_data->recordingstudio_window_gtk_builder, "media-playback-stop" ) );
             gtk_button_set_image( (GtkButton*) toolbutton, imageWidget );
-            gtk_button_set_label( (GtkButton*) toolbutton, "Stop" );
+            gtk_button_set_label( (GtkButton*) toolbutton, "Pause" );
           }
       }
     bar_data->grab = grab_value;

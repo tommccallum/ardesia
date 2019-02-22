@@ -24,6 +24,8 @@
 
 #include <utils.h>
 #include <preference_dialog.h>
+#include <annotation_window.h>
+#include <bar_callbacks.h>
 #include <background_window.h>
 
 
@@ -108,7 +110,9 @@ on_preference_ok_button_clicked (GtkButton *buton,
       // rgba = g_strdup_printf ("%s%s", rgb, a);
 
       rgba = gdkrgba_to_rgba(gdkcolor);
-      update_background_color( rgba );
+
+      add_background_button(rgba, BACKGROUND_MODE_COLOR, NULL, rgba);
+
 
       // g_free (a);
       // g_free (rgb);
@@ -140,8 +144,17 @@ on_preference_ok_button_clicked (GtkButton *buton,
                 }
               else
                 {
-                    update_background_image( filename );
-
+                    // cut out filename (without extension) from absolute file path
+                    int start = g_substrlastpos( filename, G_DIR_SEPARATOR_S )+1;
+                    if ( start < 0 ) {
+                        start = 0;
+                    }
+                    int end = g_substrlastpos( filename, "." );
+                    if ( end < start ) {
+                        end = strlen( filename );
+                    }
+                    gchar* name = g_substr( filename, start, end );
+                    add_background_button(name, BACKGROUND_MODE_FILE, filename, NULL);
                   fclose (stream);
                 }
             }
@@ -149,14 +162,14 @@ on_preference_ok_button_clicked (GtkButton *buton,
             {
               /* The file is not set; same cae that no background */
 
-              clear_background_context ();
+              //clear_background_context ();
 
             }
         }
       else
         {
           /* none */
-          clear_background_context ();
+          //clear_background_context ();
         }
     }
 }

@@ -10,12 +10,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Ardesia is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -80,13 +80,13 @@ is_similar_to_old_pixel_value    (struct FillInfo *fill_info,
 
       //printf("Color %d %d %d %d , %d %d %d %d\n", r, g, b, a, or, og, ob, oa);
       //printf ("delta A %d\n", abs(oa-a));
-      
+
       guint deltaa = abs (oa-a);
       gfloat deltar = fabs (or*oa/256.0-r*a/256.0);
       gfloat deltag = fabs (og*oa/256.0-g*a/256.0);
       gfloat deltab = fabs (ob*oa/256.0-b*a/256.0);
 
-      /* 
+      /*
        * It excludes the points with alpha value used for transparent, semitranparent and opaque color.
        * This is a rough way to detect the borders.
        * The points are filtered on threshold and balanced with alpha channel.
@@ -102,7 +102,7 @@ is_similar_to_old_pixel_value    (struct FillInfo *fill_info,
         }
     }
 
-  return FALSE; 
+  return FALSE;
 }
 
 
@@ -192,7 +192,7 @@ flood_fill                   (cairo_t          *annotation_cairo_context,
 {
 
   struct FillInfo fill_info;
-  
+
   fill_info.width = cairo_image_surface_get_width (surface);
   fill_info.height = cairo_image_surface_get_height (surface);
   fill_info.surface = surface;
@@ -207,6 +207,7 @@ flood_fill                   (cairo_t          *annotation_cairo_context,
 
   if (filled_colorint == fill_info.orig_color)
     {
+        g_printf("not filling as underlying pixel is the same colour as current pen selection\n");
       return;
     }
 
@@ -217,7 +218,5 @@ flood_fill                   (cairo_t          *annotation_cairo_context,
   cairo_set_source_surface (annotation_cairo_context, surface, 0, 0);
   cairo_paint (annotation_cairo_context);
   cairo_stroke (annotation_cairo_context);
-  
+
 }
-
-

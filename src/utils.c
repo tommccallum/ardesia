@@ -234,7 +234,7 @@ clear_cairo_context     (cairo_t  *cr)
 {
   if (cr)
     {
-      cairo_save (cr);
+      cairo_save (cr); // without this the tool icon disappears
       cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
       cairo_paint (cr);
       cairo_restore (cr);
@@ -433,9 +433,9 @@ inside_bar_window       (gdouble xp,
  * This is the bit that should allow mouse signals to get through to the bar.
  */
 void
-drill_window_in_bar_area     (GtkWidget *widget)
+drill_window_in_bar_area     (GtkWidget* layer, GtkWidget* window)
 {
-  GtkWidget *bar= get_bar_widget ();
+  GtkWidget *bar= window;
   gint x, y, width, height;
 
   gtk_window_get_position (GTK_WINDOW (bar), &x, &y);
@@ -448,8 +448,8 @@ drill_window_in_bar_area     (GtkWidget *widget)
   rB->height = height;
 
   gint ann_width=0, ann_height=0, ann_x=0, ann_y=0;
-  gtk_window_get_position (GTK_WINDOW (widget), &ann_x, &ann_y);
-  gtk_window_get_size (GTK_WINDOW (widget), &ann_width, &ann_height);
+  gtk_window_get_position (GTK_WINDOW (layer), &ann_x, &ann_y);
+  gtk_window_get_size (GTK_WINDOW (layer), &ann_width, &ann_height);
 
   GdkRectangle* rA = g_new( GdkRectangle, 1 );
   rA->x = ann_x;
@@ -458,6 +458,9 @@ drill_window_in_bar_area     (GtkWidget *widget)
   rA->height = ann_height;
 
   if ( intersect( rA, rB ) == TRUE ) {
+      g_free( rB );
+      rB = NULL;
+
       // bar
       const cairo_rectangle_int_t widget_rect = { x+1, y+1, width-1, height-1 };
       cairo_region_t *widget_reg = cairo_region_create_rectangle (&widget_rect);
@@ -466,18 +469,66 @@ drill_window_in_bar_area     (GtkWidget *widget)
       cairo_region_t *ann_reg = cairo_region_create_rectangle (&ann_rect);
 
       cairo_region_subtract (ann_reg, widget_reg);
+      cairo_region_destroy (widget_reg);
+
+      // we also want to drill down other windows if they too are visible
+      if ( annotation_data->background_selection_window != NULL ) {
+          g_printf("drilling hole for background selection window\n");
+          gtk_window_get_position (GTK_WINDOW (annotation_data->background_selection_window), &x, &y);
+          gtk_window_get_size (GTK_WINDOW (annotation_data->background_selection_window), &width, &height);
+          rB = g_new( GdkRectangle, 1 );
+          rB->x = x;
+          rB->y = y;
+          rB->width = width;
+          rB->height = height;
+          if ( intersect( rA, rB ) == TRUE ) {
+              g_printf("drilling hole for background selection window - intersect was true\n");
+              cairo_rectangle_int_t widget_rect2 = { x+1, y+1, width-1, height-1 };
+              widget_reg = cairo_region_create_rectangle (&widget_rect2);
+              cairo_region_subtract (ann_reg, widget_reg);
+              cairo_region_destroy (widget_reg);
+          }
+          g_free( rB );
+          rB = NULL;
+      }
+      if ( annotation_data->font_window != NULL ) {
+          g_printf("drilling hole for font window\n");
+          gtk_window_get_position (GTK_WINDOW (annotation_data->font_window), &x, &y);
+          gtk_window_get_size (GTK_WINDOW (annotation_data->font_window), &width, &height);
+          rB = g_new( GdkRectangle, 1 );
+          rB->x = x;
+          rB->y = y;
+          rB->width = width;
+          rB->height = height;
+          if ( intersect( rA, rB ) == TRUE ) {
+              g_printf("drilling hole for background selection window - intersect was true\n");
+              cairo_rectangle_int_t widget_rect3 = { x+1, y+1, width-1, height-1 };
+              widget_reg = cairo_region_create_rectangle (&widget_rect3);
+              cairo_region_subtract (ann_reg, widget_reg);
+              cairo_region_destroy (widget_reg);
+          }
+          g_free( rB );
+          rB = NULL;
+      }
+
 
       // drill with input shape the pointer will go below the window.
-      gtk_widget_input_shape_combine_region (widget, ann_reg);
+      // @TODO this is not additive currently so we need to keep a current region
+      gtk_widget_input_shape_combine_region (layer, ann_reg);
 
       // drill with shape; the area will be transparent.
-      gtk_widget_shape_combine_region (widget, ann_reg);
+      // this is currently doing nothing useful.
+      //gtk_widget_shape_combine_region (layer, ann_reg);
+      //gdk_window_shape_combine_region ( gtk_widget_get_window(layer), ann_reg, 0, 0);
 
       cairo_region_destroy (ann_reg);
-      cairo_region_destroy (widget_reg);
+
   }
   g_free( rA );
-  g_free( rB );
+  if ( rB != NULL ) {
+      g_free( rB );
+  }
+
 }
 
 

@@ -223,23 +223,42 @@ draw_character( cairo_t* cr, CharInfo* char_info ) {
         }
 
         cairo_save(cr);
-        g_printf("Drawing character at %f %f %s\n", char_info->x, char_info->y, char_info->color);
-        cairo_move_to (cr, char_info->x, char_info->y);
+        g_printf("[DRAW] Drawing character at %f %f %s %s\n", char_info->x, char_info->y, char_info->color, char_info->font_family);
+
         cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
         //cairo_set_source_rgba( cr, r, g, b, a);
 
         cairo_set_line_width (cr, char_info->pen_width);
         cairo_set_source_color_from_string (cr, char_info->color);
-        cairo_set_font_size (cr, char_info->font_size);
+        // cairo_set_font_size (cr, char_info->font_size);
 
         /* Select the font */
-        cairo_select_font_face (cr, char_info->font_family,
-                                CAIRO_FONT_SLANT_NORMAL,
-                                CAIRO_FONT_WEIGHT_NORMAL);
+        // cairo_select_font_face (cr, char_info->font_family,
+        //                         CAIRO_FONT_SLANT_NORMAL,
+        //                         CAIRO_FONT_WEIGHT_NORMAL);
 
-        cairo_text_extents (cr, char_info->character, &char_info->extents); // gets the bounding box of the non-whitespace characters
-        cairo_show_text (cr, char_info->character);
-        cairo_stroke (cr);
+        // uses the Pango Layout interface
+        PangoLayout* layout = pango_cairo_create_layout( cr );
+        pango_layout_set_font_description( layout, char_info->pango_font_description );
+        pango_layout_set_text( layout, char_info->character, -1 );
+
+
+        // match the pango layout with the cairo object and any transformation
+        pango_cairo_update_layout( cr, layout );
+
+        gint text_width, text_height;
+        pango_layout_get_pixel_size( layout, &text_width, &text_height );
+        gint baseline = pango_layout_get_baseline( layout );
+        cairo_move_to (cr, char_info->x, char_info->y - (baseline / PANGO_SCALE) );
+
+        // draw layout on cairo context
+        pango_cairo_show_layout( cr, layout );
+        char_info->text_width = text_width;
+        char_info->text_height = text_height;
+        char_info->baseline = baseline;
+        //cairo_show_text (cr, char_info->character);
+        //cairo_text_extents (cr, char_info->character, &char_info->extents); // gets the bounding box of the non-whitespace characters
+        //cairo_stroke (cr);
         cairo_surface_flush( cairo_get_target(cr) );
         cairo_restore(cr);
 
@@ -272,6 +291,7 @@ print_text_properties( CharInfo* char_info ) {
     g_printf("Character: %s\n", char_info->character);
     g_printf("Position: %f, %f\n", char_info->x, char_info->y);
     g_printf("Bearing: %f, %f\n", char_info->extents.x_bearing, char_info->extents.y_bearing);
+    g_printf("Advance: %f, %f\n", char_info->extents.x_advance, char_info->extents.y_advance);
     g_printf("Pen Width: %d\n", char_info->pen_width);
     g_printf("Color: %s\n", char_info->color);
     g_printf("Font Family: %s\n", char_info->font_family);
@@ -289,12 +309,21 @@ assign_text_properties( CharInfo* char_info ) {
     char_info->pen_width = text_data->pen_width;
     char* copy = g_strdup_printf("%s", text_data->color);
     char_info->color = copy;
-    copy = g_strdup_printf("%s", text_config->fontfamily);
-    char_info->font_family = copy;
     char_info->italics = CAIRO_FONT_SLANT_NORMAL;
     char_info->font_weight = CAIRO_FONT_WEIGHT_NORMAL;
     char_info->background_color = NULL;
-    char_info->font_size=32;
+
+    if ( annotation_data->font == NULL ) {
+        char_info->pango_font_description = NULL;
+        copy = g_strdup_printf("%s", text_config->fontfamily);
+        char_info->font_family = copy;
+        char_info->font_size=32;
+    } else {
+        char_info->pango_font_description = annotation_data->font;
+        char_info->font_family = g_strdup_printf("%s", pango_font_description_get_family( annotation_data->font ) );
+        char_info->font_size = pango_font_description_get_size( annotation_data->font ) /  PANGO_SCALE;
+        g_printf("font: %s %d\n", char_info->font_family, char_info->font_size );
+    }
 }
 
 void
@@ -318,21 +347,27 @@ delete_character        ()
             } else {
                 cairo_save( text_data->cr );
                 cairo_set_operator (text_data->cr, CAIRO_OPERATOR_CLEAR);
-                cairo_rectangle (text_data->cr,
-                                char_info->x + char_info->extents.x_bearing - 1,
-                                char_info->y + char_info->extents.y_bearing - 1,
-                                text_data->pos->x - char_info->x,
-                                text_data->max_font_height + 2);
-                                cairo_fill (text_data->cr); // fill inner piece of rectangle
-                                cairo_stroke( text_data->cr); // draw border
-                                cairo_restore( text_data->cr );
+                if ( char_info->pango_font_description == NULL ) {
+                    cairo_rectangle (text_data->cr,
+                                    char_info->x + char_info->extents.x_bearing,
+                                    char_info->y + char_info->extents.y_bearing,
+                                    char_info->extents.width, //text_data->pos->x - char_info->x,
+                                    char_info->extents.height);
+                } else {
+                    cairo_rectangle (text_data->cr,
+                                    char_info->x, //+ char_info->text_width,
+                                    char_info->y - (char_info->baseline / PANGO_SCALE), //+ char_info->text_height,
+                                    char_info->text_width, //text_data->pos->x - char_info->x,
+                                    char_info->text_height);
+                }
+                cairo_fill (text_data->cr); // fill inner piece of rectangle
+                cairo_stroke( text_data->cr); // draw border
+                cairo_restore( text_data->cr );
             }
             text_data->pos->x = char_info->x;
             text_data->pos->y = char_info->y;
             destroy_text_properties( char_info );
             text_data->letterlist = g_slist_remove (text_data->letterlist, char_info);
-
-            gtk_widget_queue_draw(text_data->window);
         }
     }
 }
@@ -349,10 +384,17 @@ handle_return_char() {
     char_info->character = "\n";
     assign_text_properties( char_info );
     text_data->letterlist = g_slist_prepend (text_data->letterlist, char_info);
-
+    CharInfo* last = NULL;
+    if ( g_slist_length(text_data->letterlist) > 0 ) {
+        last = (CharInfo*) ( g_slist_last(text_data->letterlist)->data );
+    }
     // move down and to underneath where user started this bit of text
     text_data->pos->x = text_config->start_x + text_config->leftmargin;
-    text_data->pos->y +=  text_data->max_font_height;
+    if ( last != NULL ) {
+        text_data->pos->y += last->text_height + 5;
+    } else {
+        text_data->pos->y +=  text_data->max_font_height;
+    }
 }
 
 static void
@@ -379,7 +421,11 @@ handle_printable_char(char ch) {
     draw_character( text_data->cr, char_info );
 
     /* Move cursor to the x step */
-    text_data->pos->x +=  text_data->extents.x_advance;
+    if ( char_info->pango_font_description == NULL ) {
+        text_data->pos->x +=  char_info->extents.x_advance;
+    } else {
+        text_data->pos->x += char_info->text_width;
+    }
 }
 
 
@@ -389,7 +435,9 @@ on_text_window_key_press_event (GtkWidget *widget,
                gpointer   user_data) {
     GdkEventKey* keyEvent = (GdkEventKey*) event;
     g_printf("on key press event for text window %d\n", keyEvent->keyval);
-
+    if ( annotation_data->font != NULL ) {
+        g_printf("PANGO FONT SELECTED\n");
+    }
     if (event->type != GDK_KEY_PRESS) {
         return TRUE;
     }
@@ -397,7 +445,7 @@ on_text_window_key_press_event (GtkWidget *widget,
     stop_blink_cursor();
     gboolean closed_to_bar = inside_bar_window (text_data->pos->x + text_data->extents.x_advance,
                                                 text_data->pos->y-text_data->max_font_height/2);
-    int width = gtk_widget_get_allocated_width(annotation_data->annotation_window);
+    int width = gtk_widget_get_allocated_width( GTK_WIDGET( annotation_data->annotation_window ) );
     // int height = gtk_widget_get_allocated_width(text_data->window);
 
     if ( is_delete_char(keyEvent->keyval) ) {

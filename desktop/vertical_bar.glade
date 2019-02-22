@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.4 -->
+<!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.0"/>
   <object class="GtkImage" id="addpdf">
@@ -194,6 +194,9 @@
     <signal name="enter-notify-event" handler="on_bar_enter_notify_event" swapped="no"/>
     <signal name="leave-notify-event" handler="on_bar_leave_notify_event" swapped="no"/>
     <signal name="window-state-event" handler="on_bar_window_state_event" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child>
       <object class="GtkHBox" id="toolboxMain">
         <property name="visible">True</property>
@@ -340,7 +343,8 @@
                 <property name="label" translatable="yes">Default Pointer</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">pointer</property>
-                <property name="group">buttonPencil</property>
+                <property name="active">True</property>
+                <property name="group">buttonPointer</property>
                 <signal name="clicked" handler="on_bar_pointer_activate" swapped="no"/>
               </object>
               <packing>
@@ -359,6 +363,7 @@
                 <property name="label" translatable="yes">Pencil</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">pencil</property>
+                <property name="group">buttonPointer</property>
                 <signal name="clicked" handler="on_bar_pencil_activate" swapped="no"/>
               </object>
               <packing>
@@ -377,7 +382,7 @@
                 <property name="label" translatable="yes">Highlighter</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">highlighter</property>
-                <property name="group">buttonPencil</property>
+                <property name="group">buttonPointer</property>
                 <signal name="clicked" handler="on_bar_highlighter_activate" swapped="no"/>
               </object>
               <packing>
@@ -396,7 +401,7 @@
                 <property name="label" translatable="yes">Text</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">text</property>
-                <property name="group">buttonPencil</property>
+                <property name="group">buttonPointer</property>
                 <signal name="clicked" handler="on_bar_text_activate" swapped="no"/>
               </object>
               <packing>
@@ -415,7 +420,7 @@
                 <property name="label" translatable="yes">Arrow</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">arrow</property>
-                <property name="group">buttonPencil</property>
+                <property name="group">buttonPointer</property>
                 <signal name="clicked" handler="on_bar_arrow_activate" swapped="no"/>
               </object>
               <packing>
@@ -434,7 +439,7 @@
                 <property name="label" translatable="yes">Bucket Fill</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">filler</property>
-                <property name="group">buttonPencil</property>
+                <property name="group">buttonPointer</property>
                 <signal name="clicked" handler="on_bar_filler_activate" swapped="no"/>
               </object>
               <packing>
@@ -453,7 +458,7 @@
                 <property name="label" translatable="yes">Eraser</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">eraser</property>
-                <property name="group">buttonPencil</property>
+                <property name="group">buttonPointer</property>
                 <signal name="clicked" handler="on_bar_eraser_activate" swapped="no"/>
               </object>
               <packing>
@@ -542,6 +547,7 @@
                 <property name="label" translatable="yes">Red</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">red</property>
+                <property name="group">buttonYellow</property>
                 <signal name="clicked" handler="on_bar_red_activate" swapped="no"/>
               </object>
               <packing>
@@ -560,7 +566,7 @@
                 <property name="label" translatable="yes">Green</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">green</property>
-                <property name="group">buttonRed</property>
+                <property name="group">buttonYellow</property>
                 <signal name="clicked" handler="on_bar_green_activate" swapped="no"/>
               </object>
               <packing>
@@ -579,7 +585,7 @@
                 <property name="label" translatable="yes">Blue</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">blue</property>
-                <property name="group">buttonRed</property>
+                <property name="group">buttonYellow</property>
                 <signal name="clicked" handler="on_bar_blue_activate" swapped="no"/>
               </object>
               <packing>
@@ -598,6 +604,7 @@
                 <property name="label" translatable="yes">Yellow</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">yellow</property>
+                <property name="active">True</property>
                 <property name="group">buttonRed</property>
                 <signal name="clicked" handler="on_bar_yellow_activate" swapped="no"/>
               </object>
@@ -617,7 +624,7 @@
                 <property name="label" translatable="yes">White</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">white</property>
-                <property name="group">buttonRed</property>
+                <property name="group">buttonYellow</property>
                 <signal name="clicked" handler="on_bar_white_activate" swapped="no"/>
               </object>
               <packing>
@@ -635,7 +642,7 @@
                 <property name="valign">center</property>
                 <property name="label" translatable="yes">Select Color</property>
                 <property name="stock_id">gtk-select-color</property>
-                <property name="group">buttonRed</property>
+                <property name="group">buttonYellow</property>
                 <signal name="clicked" handler="on_bar_color_activate" swapped="no"/>
               </object>
               <packing>
@@ -736,13 +743,31 @@
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Preferences</property>
+                <property name="tooltip_text" translatable="yes">Background</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="label" translatable="yes">Preferences</property>
+                <property name="label" translatable="yes">Background</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-preferences</property>
                 <signal name="clicked" handler="on_bar_preferences_activate" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="buttonFonts">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Fonts</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Fonts</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-select-font</property>
+                <signal name="clicked" handler="on_bar_fonts_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -794,9 +819,6 @@
           </packing>
         </child>
       </object>
-    </child>
-    <child type="titlebar">
-      <placeholder/>
     </child>
   </object>
 </interface>

@@ -27,6 +27,7 @@
 #endif
 
 #include <utils.h>
+#include <annotation_window.h>
 #include <background_window.h>
 #include <background_window_callbacks.h>
 #include <annotation_window.h>
@@ -90,7 +91,7 @@ void clear_background_context      ()
   // gtk_window_set_opacity (GTK_WINDOW (annotation_data->annotation_window), BACKGROUND_OPACITY);
 
   clear_cairo_context (background_data->cr);
-
+  annotation_data->is_background_visible = FALSE;
   gtk_widget_queue_draw( annotation_data->annotation_window );
 }
 
@@ -218,7 +219,7 @@ update_background_color      (gchar* rgba)
 {
     g_printf("Updating background color\n");
     background_data->type = 1;
-  background_data->color = rgba;
+  background_data->color = g_strdup_printf("%s",rgba);
   load_color_onto_context( background_data->color, background_data->cr);
   annotation_data->is_background_visible = TRUE;
   gtk_widget_queue_draw( annotation_data->annotation_window );

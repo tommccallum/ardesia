@@ -42,7 +42,7 @@
 #endif
 
 void
-draw_cairo_context (cairo_t* dest, cairo_t* source) ;
+draw_cairo_context (cairo_t* dest, cairo_t* source, gboolean use_paint) ;
 
 cairo_surface_t*
 scale_image( gchar* image, gint new_width, gint new_height ) ;

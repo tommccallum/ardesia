@@ -36,6 +36,7 @@
 #include <background_window.h>
 #include <text_window.h>
 #include <cairo_functions.h>
+#include <bar.h>
 
 #ifdef _WIN32
 #  include <windows_utils.h>
@@ -212,7 +213,7 @@ annotate_acquire_input_grab  ()
    * MACOSX; will do nothing.
    */
   gtk_widget_input_shape_combine_region (annotation_data->annotation_window, NULL);
-  drill_window_in_bar_area (annotation_data->annotation_window);
+  drill_window_in_bar_area (annotation_data->annotation_window, get_bar_widget() );
 #endif
 
 }
@@ -367,35 +368,32 @@ roundify           (AnnotateDeviceData *devdata,
 
       if (rect_list)
         {
-          AnnotatePoint *point1 = (AnnotatePoint *) g_slist_nth_data (rect_list, 0);
-          AnnotatePoint *point2 = (AnnotatePoint *) g_slist_nth_data (rect_list, 1);
-          AnnotatePoint *point3 = (AnnotatePoint *) g_slist_nth_data (rect_list, 2);
-          gdouble p1p2 = get_distance(point1->x, point1->y, point2->x, point2->y);
-          gdouble p2p3 = get_distance(point2->x, point2->y, point3->x, point3->y);
-          gdouble e_threshold = 0.5;
-          gdouble a = 0;
-          gdouble b = 0;
-          if (p1p2>p2p3)
-            {
-              b = p2p3/2;
-              a = p1p2/2;
+            // rewrote this algorithm into a much simpler one that identifies
+            // the bounding rectangle of all the points and draws the appropriate
+            // ellipse/circle.
+            gint n = g_slist_length(rect_list);
+            gint left=0, right=0, top=0, bottom=0;
+            AnnotatePoint *point1 = (AnnotatePoint *) g_slist_nth_data (rect_list, 0);
+            left = point1->x;
+            right = point1->x;
+            top = point1->y;
+            bottom = point1->y;
+            for( int ii=1; ii < n; ii++ ) {
+                point1 = (AnnotatePoint *) g_slist_nth_data (rect_list, ii);
+                if ( point1->x < left ) {
+                    left = point1->x;
+                } else if ( point1->x > right ) {
+                    right = point1->x;
+                }
+                if ( point1->y < top ) {
+                    top = point1->y;
+                } else if ( point1->x > bottom ) {
+                    bottom = point1->y;
+                }
             }
-          else
-            {
-              a = p2p3/2;
-              b = p1p2/2;
-            }
-          gdouble e = 1-powf((b/a), 2);
-          /* If the eccentricity is roundable to 0 it is a circle */
-          if ((e >= 0) && (e <= e_threshold))
-            {
-              /* Move the down right point in the right position to square the circle */
-              gdouble quad_distance = (p1p2+p2p3)/2;
-              point3->x = point1->x+quad_distance;
-              point3->y = point1->y+quad_distance;
-            }
+            annotate_draw_ellipse (devdata, left, top, right-left, bottom-top, point1->pressure);
 
-          annotate_draw_ellipse (devdata, point1->x, point1->y, point3->x-point1->x, point3->y-point1->y, point1->pressure);
+
           g_slist_foreach (rect_list, (GFunc)g_free, NULL);
           g_slist_free (rect_list);
         }
@@ -735,7 +733,7 @@ annotate_add_savepoint  ()
 void
 initialize_annotation_cairo_context    (AnnotateData *data)
 {
-
+g_printf("736: initialize_annotation_cairo_context\n");
   if (annotation_data->annotation_cairo_context == NULL)
     {
         g_printf("initializing annotation cairo context\n");
@@ -906,9 +904,15 @@ annotate_get_thickness  ()
   if (annotation_data->cur_context->type == ANNOTATE_ERASER)
     {
       /* the eraser is bigger than pen */
-      gdouble corrective_factor = 2.5;
+      gdouble corrective_factor = annotation_data->eraser_multiplier;
       return annotation_data->thickness * corrective_factor;
     }
+
+    if (is_highlighter_toggle_tool_button_active ())
+      {
+          gdouble corrective_factor = annotation_data->highlighter_multipler;
+          return annotation_data->thickness * corrective_factor;
+      }
 
   return annotation_data->thickness;
 }
@@ -1066,6 +1070,7 @@ annotate_select_pen          ()
 void
 annotate_select_filler       ()
 {
+    g_printerr ("Select filler tool\n");
   if (annotation_data->debug)
     {
       g_printerr ("The pen with colour %s has been selected\n",
@@ -1259,6 +1264,7 @@ annotate_fill                (AnnotateDeviceData *devdata,
                               gdouble             x,
                               gdouble             y)
 {
+    g_print("Fill with fill flood algorithm\n");
   cairo_save( annotation_data->annotation_cairo_context);
   int width = gtk_widget_get_allocated_width(annotation_data->annotation_window);
   int height = gtk_widget_get_allocated_width(annotation_data->annotation_window);
@@ -1291,6 +1297,8 @@ annotate_fill                (AnnotateDeviceData *devdata,
 
   cairo_restore( annotation_data->annotation_cairo_context);
   annotate_add_savepoint ();
+
+  // @TODO needs something to happen at this point for it to become visible
 }
 
 
@@ -1349,10 +1357,12 @@ annotate_select_tool (AnnotateData *data,
             {
               annotate_select_eraser ();
             }
-          else
+          else if ( data->old_paint_type == ANNOTATE_PEN)
             {
               annotate_select_pen ();
-            }
+          } else {
+              annotate_release_grab ();
+          }
         }
 
     }
@@ -1456,6 +1466,15 @@ annotate_quit           ()
         {
           annotate_paint_context_free (annotation_data->default_filler);
         }
+
+        if ( annotation_data->background_selection_window ) {
+            gtk_widget_destroy( annotation_data->background_selection_window );
+            annotation_data->background_selection_window = NULL;
+        }
+        if ( annotation_data->font_window ) {
+            gtk_widget_destroy( annotation_data->font_window );
+            annotation_data->font_window = NULL;
+        }
     }
 
     if ( annotation_data->monitor ) {
@@ -1484,9 +1503,11 @@ annotate_release_input_grab  ()
    */
   gtk_widget_input_shape_combine_region (annotation_data->annotation_window, NULL);
 
+  // putting this here stops the bar from picking up signals on re-entry
+  //drill_window_in_bar_area( annotation_data->annotation_window, get_bar_widget() );
+
   const cairo_rectangle_int_t ann_rect = { 0, 0, 0, 0 };
   cairo_region_t *r = cairo_region_create_rectangle (&ann_rect);
-
   gtk_widget_input_shape_combine_region (annotation_data->annotation_window, r);
   cairo_region_destroy (r);
 
@@ -1507,6 +1528,7 @@ annotate_release_input_grab  ()
 void
 annotate_release_grab   ()
 {
+    g_printf("releasing grab (is_grabbed=%d)\n", annotation_data->is_grabbed);
   if (annotation_data->is_grabbed)
     {
 
@@ -1516,7 +1538,18 @@ annotate_release_grab   ()
         }
 
       annotate_release_input_grab ();
-      gtk_window_present (GTK_WINDOW (get_bar_widget ()));
+
+      //gtk_window_present (GTK_WINDOW (get_bar_widget ()));
+      // if ( annotation_data->background_selection_window != NULL ) {
+      //     g_printf("presenting background selection window\n");
+      //     gtk_window_present (GTK_WINDOW (annotation_data->background_selection_window));
+      // }
+      // if ( annotation_data->font_window != NULL ) {
+      //     g_printf("presenting font window\n");
+      //     gtk_window_present (GTK_WINDOW (annotation_data->font_window));
+      // }
+
+      // allows other tool types to be selected - do not comment out!
       annotation_data->is_grabbed = FALSE;
     }
 }
@@ -1587,7 +1620,7 @@ annotate_clear_screen   ()
 static void
 create_annotation_data() {
     annotation_data = g_malloc ((gsize) sizeof (AnnotateData));
-    gchar* color = g_strdup ("FF0000FF");
+    gchar* color = g_strdup ("FFFF00FF");
 
     /* Initialize the data structure. */
     annotation_data->is_background_visible = FALSE;
@@ -1604,10 +1637,10 @@ create_annotation_data() {
 
     annotation_data->color = color;
     annotation_data->is_grabbed = FALSE;
-    annotation_data->arrow = FALSE;
+    annotation_data->arrow = TRUE;
     annotation_data->rectify = FALSE;
     annotation_data->roundify = FALSE;
-    annotation_data->old_paint_type = ANNOTATE_PEN;
+    annotation_data->old_paint_type = ANNOTATE_POINTER;
 
     annotation_data->is_cursor_hidden = TRUE;
 
@@ -1630,7 +1663,18 @@ create_annotation_data() {
     annotation_data->is_cursor_visible = FALSE;
     annotation_data->cursor_timer = 0;
     annotation_data->cursor_step = 0;
-    
+
+    annotation_data->background_selection_window = NULL;
+    annotation_data->background_selection_container = NULL;
+    annotation_data->background_button_data = NULL;
+    annotation_data->background_button_last_selected = BACKGROUND_NONE_SELECTED;
+
+    annotation_data->eraser_multiplier = 2.5;
+    annotation_data->highlighter_multipler = 5.0;
+
+    annotation_data->font_window = NULL;
+    annotation_data->font = NULL;
+
     // we create background data objects at the same time
     // to be safe
     background_data = create_background_data();
@@ -1893,6 +1937,7 @@ annotation_window_button_release( GdkEventButton* ev, AnnotateData* data) {
         g_printerr ("Device '%s': Invalid event; I ungrab all\n",
                     gdk_device_get_name (master));
         annotate_release_grab ();
+        gtk_widget_queue_draw(annotation_data->annotation_window);
         return FALSE;
       }
 
@@ -1909,6 +1954,7 @@ annotation_window_button_release( GdkEventButton* ev, AnnotateData* data) {
       {
         /* The last point was outside the bar then ungrab. */
         annotate_release_grab ();
+        gtk_widget_queue_draw(annotation_data->annotation_window);
         return FALSE;
       }
     if (data->old_paint_type == ANNOTATE_PEN)
@@ -1924,16 +1970,19 @@ annotation_window_button_release( GdkEventButton* ev, AnnotateData* data) {
     {
       /* The last point was outside the bar then ungrab. */
       annotate_release_grab ();
+      gtk_widget_queue_draw(annotation_data->annotation_window);
       return FALSE;
     }
 
     if (data->cur_context == data->default_filler)
       {
         annotate_fill (masterdata, data, ev->x, ev->y);
+        gtk_widget_queue_draw(annotation_data->annotation_window);
         return TRUE;
       }
 
     initialize_annotation_cairo_context (data);
+
 
 
     if (length > 2)
@@ -2008,4 +2057,60 @@ annotation_window_change(int width, int height) {
     if ( background_data->cr == NULL ) {
         background_data->cr = create_new_context(width, height);
     }
+}
+
+gboolean
+on_font_window_leave_event (GtkWidget *widget, GdkEvent  *event, gpointer   user_data) {
+    annotation_data->font = gtk_font_chooser_get_font_desc( GTK_FONT_CHOOSER(user_data) );
+    g_printf("selecting new font\n");
+    return FALSE;
+}
+
+gboolean
+on_font_window_destroy( GtkWidget* widget, gpointer userdata ) {
+    annotation_data->font_window = NULL;
+    return FALSE;
+}
+
+gboolean
+on_font_window_configure (GtkWidget *widget, GdkEvent  *event, gpointer   user_data) {
+   if ( bar_data->grab == FALSE ) {
+       gtk_widget_queue_draw( annotation_data->annotation_window );
+   }
+   return FALSE;
+}
+
+void
+create_text_settings_window() {
+    GtkWidget* window = NULL;
+    GtkWidget* font_chooser = NULL;
+    // GtkBox* box = NULL;
+
+    if ( annotation_data->font_window == NULL ) {
+        window = GTK_WIDGET(gtk_window_new(GTK_WINDOW_TOPLEVEL));
+
+        gtk_window_set_title( GTK_WINDOW(window), "Fonts");
+        gtk_window_set_default_size( GTK_WINDOW(window), 200, 400 );
+        font_chooser = gtk_font_chooser_widget_new ();
+
+        // box = GTK_BOX(gtk_box_new( GTK_ORIENTATION_HORIZONTAL, 0 ));
+        //
+        // //actionbar = GTK_ACTION_BAR( gtk_action_bar_new() );
+        // //gtk_box_pack_start( box, GTK_WIDGET(actionbar), TRUE, TRUE, 0 );
+        gtk_container_add( GTK_CONTAINER(window), GTK_WIDGET(font_chooser) );
+
+        g_signal_connect( window, "leave-notify-event", (GCallback) on_font_window_leave_event, font_chooser );
+        g_signal_connect( window, "destroy", (GCallback) on_font_window_destroy, NULL );
+        g_signal_connect( window, "configure-event", (GCallback) on_font_window_configure, NULL );
+
+        if ( annotation_data->font == NULL ) {
+            annotation_data->font = gtk_font_chooser_get_font_desc( GTK_FONT_CHOOSER(font_chooser) );
+            pango_font_description_set_size( annotation_data->font, 32 * PANGO_SCALE );
+        }
+        gtk_font_chooser_set_font_desc( GTK_FONT_CHOOSER(font_chooser), annotation_data->font );
+
+        annotation_data->font_window = window;
+    }
+
+    gtk_widget_show_all( window );
 }

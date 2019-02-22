@@ -7,6 +7,9 @@
 + Modified the VLC script so that it matches the screen.
 + Modified screenshot to ensure toolbar is out of the way before screen shot is taken.
 + Some modifications to the shape recognition to try to make it more intuitive.
++ Added a backgrounds window for selecting common backgrounds
++ Added a recording window for common recording functionality
++ Added a unit testing framework - unity
 
 ===============================================================================================
                       ##     #####    #####    ######   ####    #     ##

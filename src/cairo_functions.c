@@ -30,7 +30,7 @@
  * @param dest   the context which has our pattern on it
  */
 void
-draw_cairo_context (cairo_t* dest, cairo_t* source) {
+draw_cairo_context (cairo_t* dest, cairo_t* source, gboolean use_paint ) {
     if ( source && dest ) {
         cairo_save( dest );
         cairo_set_operator(dest, CAIRO_OPERATOR_OVER);
@@ -40,7 +40,12 @@ draw_cairo_context (cairo_t* dest, cairo_t* source) {
         // position the source surface over the destination
         cairo_set_source_surface (dest, pattern, 0, 0);
         // paint the image on to the window
-        cairo_paint(dest);
+        if ( use_paint ) {
+            cairo_paint(dest);
+        } else {
+            cairo_fill_preserve(dest);
+        }
+
         cairo_restore( dest );
     }
 }

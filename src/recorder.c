@@ -51,12 +51,13 @@ call_recorder (gchar *filename,
                gchar *option)
 {
   GPid pid = (GPid) 0;
-  gchar* pidfilename = g_strdup_printf("%s%s%s", g_get_tmp_dir (), G_DIR_SEPARATOR_S, "ardesia_recorder.pid");
-  gchar* logfilename = g_strdup_printf("%s%s%s", g_get_tmp_dir (), G_DIR_SEPARATOR_S, "ardesia_recorder.log");
+  gchar* pidfilename = g_strdup_printf("%s%s%s", get_project_dir(), G_DIR_SEPARATOR_S, "ardesia_recorder.pid");
+  gchar* logfilename = g_strdup_printf("%s%s%s", get_project_dir(), G_DIR_SEPARATOR_S, "ardesia_recorder.log");
   gchar* quoted_filename = g_strdup_printf("%s", filename);
-  gchar* argv[9] = { RECORDER_FILE, option, logfilename,
+  gchar* argv[10] = { RECORDER_FILE, option, logfilename,
                     "0", "0", "100", "100",
                     quoted_filename,
+                    pidfilename,
                     (gchar *) 0
                 };
 
@@ -67,7 +68,7 @@ call_recorder (gchar *filename,
   argv[5] = g_strdup_printf("%d",gtk_widget_get_allocated_width( annotation_data->annotation_window ));
   argv[6] = g_strdup_printf("%d",gtk_widget_get_allocated_height( annotation_data->annotation_window ));
 
-  g_printf("call_recorder: %s %s %s %s %s %s\n", logfilename, argv[3], argv[4], argv[5], argv[6], argv[7]);
+  g_printf("call_recorder: %s %s %s %s %s %s %s\n", logfilename, argv[3], argv[4], argv[5], argv[6], argv[7], argv[8]);
 
   if (
       g_spawn_async (NULL /*working_directory*/,
@@ -89,7 +90,7 @@ call_recorder (gchar *filename,
     g_free(argv[6]);
 
 
-    // wait 1 second and then check to see if /tmp/ardesia_recorder.pid exists
+    // wait 1 second and then check to see if ardesia_recorder.pid exists
     // if its does not then we failed to start VLC properly
     gboolean pid_exists = file_exists( pidfilename );
     int wait = 0;

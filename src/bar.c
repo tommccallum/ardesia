@@ -133,12 +133,12 @@ static BarData *
 init_bar_data ()
 {
   BarData *bar_data = (BarData *) g_malloc ((gsize) sizeof (BarData));
-  bar_data->color = g_strdup_printf ("%s", "FF0000FF");
+  bar_data->color = g_strdup_printf ("%s", "FFFF00FF"); // default to yellow
   bar_data->annotation_is_visible = TRUE;
   bar_data->grab = TRUE;
   bar_data->rectifier = FALSE;
   bar_data->rounder = FALSE;
-  bar_data->thickness = MEDIUM_THICKNESS;
+  bar_data->thickness = THIN_THICKNESS;
   bar_data->screenshot_pending = FALSE;
   bar_data->screenshot_callback = NULL;
   bar_data->screenshot_saved_location_x = -1;
@@ -284,6 +284,12 @@ create_bar_window (CommandLine *commandline,
   /* Move the window in the desired position. */
   gtk_window_move (GTK_WINDOW (bar_window), rect->x + x, rect->y + y);
 
+
+  // select arrow tool and the color yellow
+  GtkToggleToolButton* arrowButton = GTK_TOGGLE_TOOL_BUTTON (gtk_builder_get_object (bar_gtk_builder, "buttonPointer"));
+  GtkToggleToolButton* yellowButton = GTK_TOGGLE_TOOL_BUTTON (gtk_builder_get_object (bar_gtk_builder, "buttonYellow"));
+  gtk_toggle_tool_button_set_active( yellowButton, TRUE );
+  gtk_toggle_tool_button_set_active( arrowButton, TRUE );
 
   return bar_window;
 }
@@ -464,6 +470,7 @@ take_pen_tool           ()
 void
 release_lock                 (BarData *bar_data)
 {
+    g_printf("releasing lock (grab: %d)\n", bar_data->grab);
   if (bar_data->grab)
     {
       /* Lock enabled. */
@@ -486,6 +493,8 @@ release_lock                 (BarData *bar_data)
         }
 #endif
 
+        gtk_widget_queue_draw(annotation_data->annotation_window );
+        
     }
 }
 
@@ -583,6 +592,7 @@ start_tool                   (BarData *bar_data)
         }
       else
         {
+            g_print("DEBUG: start_tool (non-text tool selected)\n");
             // this call is required as the leave event for the bar occurs
             // when we enter the toolbar object
             stop_text_widget();
