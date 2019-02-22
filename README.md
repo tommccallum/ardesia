@@ -1,16 +1,18 @@
-+ This is a modified version of ardesia by Pietro Pilolli.  
-+ This version stabilises the API for GTK 3.20.
-+ Removes the need for 3 windows, instead providing support for a number of cairo contexts instead.
-+ An additional tool has been added for hiding the drawing items.
-+ Allows toolbar and drawing surface to be placed on different monitors.
-+ Allows drawing surface to exist as a certain size, full screen, or an individual monitor.
-+ Modified the VLC script so that it matches the screen.
-+ Modified screenshot to ensure toolbar is out of the way before screen shot is taken.
-+ Some modifications to the shape recognition to try to make it more intuitive.
-+ Added a backgrounds window for selecting common backgrounds
-+ Added a recording window for common recording functionality
-+ Added a unit testing framework - unity
+* This is a modified version of ardesia by Pietro Pilolli.  
+* This version stabilises the API for GTK 3.20.
+* Removes the need for 3 windows, instead providing support for a number of cairo contexts instead.
+* An additional tool has been added for hiding the drawing items.
+* Allows toolbar and drawing surface to be placed on different monitors.
+* Allows drawing surface to exist as a certain size, full screen, or an individual monitor.
+* Modified the VLC script so that it matches the screen.
+* Modified screenshot to ensure toolbar is out of the way before screen shot is taken.
+* Some modifications to the shape recognition to try to make it more intuitive.
+* 22nd Feb 2019
+  * Added a backgrounds window for selecting common backgrounds
+  * Added a recording window for common recording functionality
+  * Added a unit testing framework - unity
 
+<pre>
 ===============================================================================================
                       ##     #####    #####    ######   ####    #     ##
                      #  #    #    #   #    #   #       #        #    #  #
@@ -19,11 +21,10 @@
                     #    #   #   #    #    #   #       #    #   #   #    #
                     #    #   #    #   #####    ######   ####    #   #    #
 ===============================================================================================
+</pre>
 
+# Introduction
 
---------------
- Introduction
---------------
 
 Ardesia is the free digital sketchpad software that help you to make coloured free-hand
 annotations with digital ink everywhere, record it and share on the network.
@@ -64,36 +65,30 @@ For more info about annotate and the new feature, please read the NEWS file loca
 current folder.
 
 
----------
- License
----------
+# License
+
 
 This Program is distributed under the Gnu General Public License version 3.
 See the file COPYING for details.
 
 
---------------
- Installation
---------------
+# Installation
 
 Please read the INSTALL file located on the current folder.
 
+# Runtime Requirements
 
-----------------------
- Runtime Requirements
-----------------------
-
-- Composite manager
+## Composite manager
   In order to run Ardesia on Linux you need to run a composite manager such as
   compiz, kwin or xcompmgr. You can also use a compositing window manager as xfwm,
   metacity and mutter.
 
   If you are a Windows "user" I remember you that only these flavours are supported:
-  - Windows 7 Ultimate, Enterprise, Professional and Home Premium
-  - Windows Vista Business, Enterprise, Ultimate and Home Premium Editions
+  * Windows 7 Ultimate, Enterprise, Professional and Home Premium
+  * Windows Vista Business, Enterprise, Ultimate and Home Premium Editions
 
 
-- VLC
+## VLC
   To use the recording feature you must install the VLC multimedia player
   and Streamer.
 
@@ -110,18 +105,16 @@ Please read the INSTALL file located on the current folder.
   variable the vlc installation folder.
 
 
-- xdg-utils (Linux only)
+## xdg-utils (Linux only)
   On Ubuntu xdg-utils is installed by default (ubuntu-desktop needs it)
   If you use a Debian like distribution, you can install the xdg-utils with this command:
 
-  $sudo apt-get install xdg-utils
+  ```$sudo apt-get install xdg-utils```
 
 
--------
- Usage
--------
+# Usage
 
-- From Gui
+## From Gui
 
 Start Ardesia clicking in the menu on Applications/Tools/Ardesia
 Now you can select colours and annotate the screen.
@@ -130,49 +123,49 @@ Video tutorial on http://www.youtube.com/watch?v=iTiV1qz-rEI
 
 Button explanation
 
-- Thickness: it selects the thin thickness for the selected tool;
+* Thickness: it selects the thin thickness for the selected tool;
   pressing the button you can select a thin, medium and thick thickness
-- Drawing mode: it selects the drawing mode to be used.
+* Drawing mode: it selects the drawing mode to be used.
   There are three different modes:
-  - Handwriting: allow you to draw withou assistance
-  - Rectifier: it rectifies your sketch;
+  * Handwriting: allow you to draw withou assistance
+  * Rectifier: it rectifies your sketch;
     it transforms the closed path in poligons,
     it is useful to paint straight lines,
     it transforms the open path in broken lines.
-  - Rounder: it rounds your sketch; 
+  * Rounder: it rounds your sketch; 
     it transforms the closed path in ellipses or smoothed closed path,
     it transforms the open path in smoothed lines with bezier spline
-- Filler: it fills the contiguos area with the selected colour
-- Arrow: it puts an arrow at the end of the line sketched
-- Text: insert a text annotation;
+* Filler: it fills the contiguos area with the selected colour
+* Arrow: it puts an arrow at the end of the line sketched
+* Text: insert a text annotation;
   select the text tool and then click on the desktop,
   now you can insert text with the real or virtual keyboard
-- Highlighter: it allows to highlight on the desktop
-- Eraser: it selects the eraser tool
-- Pen: it selects the pen tool
-- Blue: it selects the blue colour
-- Green: it selects the green color
-- Yellow: it selects the yellow colour
-- Red: it selects the red colour
-- White: it selects the white colour
-- Colour selector: it allow to selects an other colour through a palette
-- Unlock: it unlocks the grab to annotate on the desktop;
+* Highlighter: it allows to highlight on the desktop
+* Eraser: it selects the eraser tool
+* Pen: it selects the pen tool
+* Blue: it selects the blue colour
+* Green: it selects the green color
+* Yellow: it selects the yellow colour
+* Red: it selects the red colour
+* White: it selects the white colour
+* Colour selector: it allow to selects an other colour through a palette
+* Unlock: it unlocks the grab to annotate on the desktop;
   after the unlock you can use as usual your desktop,
   if do you want restart to sketch push the lock icon
-- Clear: it erases all the desktop annotation
-- Undo: it reverses the annotation to the older state
-- Redo: it advances the annotation to the more current state
-- Preferences: it allow to set some preference;
-  - you can select the background colour
-  - you can select the background image;
-    - a set of useful backgrounds will be shown
-    - you can select an other image file also
-- Screenshoot: it exports in a picture file your desktop screenshot
-- Export as pdf: it export as pdf; the first time you must
+* Clear: it erases all the desktop annotation
+* Undo: it reverses the annotation to the older state
+* Redo: it advances the annotation to the more current state
+* Preferences: it allow to set some preference;
+  * you can select the background colour
+  * you can select the background image;
+    * a set of useful backgrounds will be shown
+    * you can select an other image file also
+* Screenshoot: it exports in a picture file your desktop screenshot
+* Export as pdf: it export as pdf; the first time you must
   select a file name, then each time that you will click 
   on the icon you will append to the pdf a new page with your
   screen content
-- Record: it records your desktop;
+* Record: it records your desktop;
   it uses the vlc tool,
   if you want allow anyone to see your work
   you can forward the stream to an icecast server
@@ -180,8 +173,8 @@ Button explanation
    on $(prefix)/share/ardesia/scripts/screencast.sh or
    if you use Windows on bin\screencast.bat).
   After a correct configuration when you push the record the streaming will start
-- Info: It shows the info about the tool
-- Quit: It allows to quit the program
+* Info: It shows the info about the tool
+* Quit: It allows to quit the program
 
 You can reuse your iwb project going in the ardesia workspace and "open with Ardesia"
 the iwb file
@@ -189,16 +182,17 @@ the iwb file
 Ardesia bar customization. You can change the ardesia bar look and feel copying the desktop/gtrc file in /ect/xdg/ardesia folder
 and customizing it. The file might be auto explanatory.
 
-- From Command Line
+## From Command Line
 
 The default behaviour of ardesia is appear in the east zone of the screen
 with a vertical layout.
 If you want modify this launch ardesia from command line in this way:
 
-# ardesia --gravity north
+```# ardesia --gravity north```
+
 
 Here it follows a complete description of the options for the Ardesia:
-
+<pre>
 Usage: ardesia [options] [filename]
 
 Ardesia the free digital sketchpad
@@ -221,12 +215,12 @@ options:
   --version ,	-v		Show version information and exit
 
 filename:	  		The interactive Whiteboard Common File (iwb)
+</pre>
 
 
 
------------------
- Troubleshooting
------------------
+# Troubleshooting
+
 
 - Ardesia does not start and says that you must enable a composite manager
   - setup your computer to use the accelerated graphic drivers
@@ -292,23 +286,16 @@ filename:	  		The interactive Whiteboard Common File (iwb)
       visit http://www.icecast.org/
 
 
--------
- Info
--------
+# Original Author Info
 
-  * To get info about the tool, please contact:
-
+* See the original GitHub source https://github.com/gfreeau/ardesia
+* To get info about the tool, please contact:
       pilolli.pietro@gmail.com
-
-  * To report bugs, please contact:
-
+* To report bugs, please contact:
       pilolli.pietro@gmail.com
 
 
 Have fun!
 
-===
-EOF
-===
 
 
