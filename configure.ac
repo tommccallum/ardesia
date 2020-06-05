@@ -11,7 +11,7 @@ AC_INIT([ardesia], [ardesia_version],
 
 AC_PREFIX_DEFAULT(/usr)
 AC_CONFIG_MACRO_DIR([m4macros])
-AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
+AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(config.h)
 
 # Check if we have enabled debug support.
